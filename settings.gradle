@@ -1,0 +1,8 @@
+rootProject.name = 'msa'
+include 'user-service'
+include 'account-service'
+include 'transaction-service'
+include 'log-service'
+include 'common-lib'
+include 'common-lib'
+
