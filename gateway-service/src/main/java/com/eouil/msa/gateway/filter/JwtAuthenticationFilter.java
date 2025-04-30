@@ -13,7 +13,7 @@ import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
 @RequiredArgsConstructor
-@Component
+@Component("gatewayJwtAuthenticationFilter")
 public class JwtAuthenticationFilter implements WebFilter {
 
     private final JwtUtil jwtUtil;

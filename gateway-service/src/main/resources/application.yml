@@ -5,10 +5,16 @@ spring:
   cloud:
     gateway:
       routes:
-        - id: user-service
+        - id: user-service-users
           uri: http://localhost:8081
           predicates:
             - Path=/api/users/**
+
+        - id: user-service-mfa
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/mfa/**
+
         - id: transaction-service
           uri: http://localhost:8082
           predicates:

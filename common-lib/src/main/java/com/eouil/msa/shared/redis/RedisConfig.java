@@ -14,7 +14,7 @@ public class RedisConfig {
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
         RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
-        config.setHostName("52.78.24.102");
+        config.setHostName("localhost");
         config.setPort(6379);
         config.setPassword(RedisPassword.of("Eouil123"));
         return new LettuceConnectionFactory(config); // 기본 Redis 연결

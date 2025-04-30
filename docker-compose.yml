@@ -17,3 +17,10 @@ services:
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
     depends_on:
       - zookeeper
+
+  redis:
+    image: redis:7.2
+    platform: linux/amd64
+    container_name: redis
+    ports:
+      - "6379:6379"

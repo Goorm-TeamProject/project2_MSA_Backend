@@ -19,22 +19,20 @@ import java.util.List;
 @Configuration
 public class SecurityConfig {
 
-    @Bean
-    public JwtAuthenticationFilter jwtAuthenticationFilter(JwtUtil jwtUtil) {
-        return new JwtAuthenticationFilter(jwtUtil);
+    private final JwtAuthenticationFilter jwtFilter;
+
+    public SecurityConfig(JwtAuthenticationFilter jwtFilter) {
+        this.jwtFilter = jwtFilter;
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http,
-                                           JwtAuthenticationFilter jwtFilter) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/users/join").permitAll()
-                        .requestMatchers("/users/login").permitAll()
-                        .requestMatchers("/users/refresh").permitAll()
+                        .requestMatchers("/users/join", "/users/login", "/users/refresh").permitAll()
+                        .requestMatchers("/users/mfa/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
@@ -42,13 +40,14 @@ public class SecurityConfig {
         return http.build();
     }
 
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:5173", "https://eouil.com"));
+        config.setAllowedOrigins(List.of("http://localhost:5173")); // 💡 중복 없이 하나만 지정
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
-        config.setAllowCredentials(true);
+        config.setAllowCredentials(true); // 인증 정보 포함 허용
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
