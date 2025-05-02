@@ -3,17 +3,23 @@ package com.eouil.msa.money.transaction.domains;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.GenericGenerator;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
+@Setter
+@Table(name = "transaction")
 public class Transaction {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long transactionId;
+    @GeneratedValue(generator = "uuid2")
+    @GenericGenerator(name = "uuid2", strategy = "uuid2")
+    @Column(name = "transaction_id", length = 36, updatable = false, nullable = false)
+    private String transactionId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

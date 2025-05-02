@@ -2,11 +2,13 @@ package com.eouil.msa.money.account.dtos;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
 
+@AllArgsConstructor
 @Getter@Setter
 public class CreateAccountRequest {
 

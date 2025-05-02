@@ -15,10 +15,7 @@ public interface AccountRepository extends JpaRepository<Account, String> {
     //계좌 존재 확인
     boolean existsByAccountNumber(String accountNumber);
 
-    // 계좌 찾기
-    Optional<Account> findByAccountNumber(String accountNumber);
-
-    //유저 찾기
+    //계좌 찾기
     List<Account> findByUserId(String userId);
 
     @Query(value = "SELECT * FROM account WHERE account_number = :accountNumber FOR UPDATE", nativeQuery = true)

@@ -99,6 +99,6 @@ public class AuthController {
 
     @GetMapping("/health")
     public ResponseEntity<String> healthCheck() {
-        return ResponseEntity.ok("ALB Health Check OK");
+        return ResponseEntity.ok("ALB User-service Health Check OK");
     }
 }

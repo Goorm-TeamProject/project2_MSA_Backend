@@ -17,7 +17,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/accounts")
 public class AccountController {
 
     private final AccountService accountService;
@@ -28,7 +28,7 @@ public class AccountController {
         this.jwtUtil = jwtUtil;
     }
 
-    @PostMapping("/accounts")
+    @PostMapping("/")
     public ResponseEntity<Void> createAccount(@RequestBody CreateAccountRequest request) {
         String userId = jwtUtil.validateTokenAndGetUserId(getAccessTokenFromHeader());
 
@@ -41,7 +41,7 @@ public class AccountController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/accounts/me")
+    @GetMapping("/me")
     public ResponseEntity<List<GetMyAccountResponse>> getMyAccount(
             @RequestHeader("Authorization") String token) {
 
@@ -62,6 +62,11 @@ public class AccountController {
             throw new RuntimeException("Authorization header is missing or invalid");
         }
         return authorizationHeader.substring(7); // "Bearer " 이후 토큰만 잘라서 반환
+    }
+
+    @GetMapping("/health")
+    public ResponseEntity<String> healthCheck() {
+        return ResponseEntity.ok("ALB Account-service Health Check OK");
     }
 
 }
