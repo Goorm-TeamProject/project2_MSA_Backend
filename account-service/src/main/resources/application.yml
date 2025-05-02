@@ -1,0 +1,52 @@
+server:
+  port: 8082
+  servlet:
+    context-path: /api
+
+spring:
+  config:
+    import: optional:aws-secretsmanager:/eouil
+
+  datasource:
+    url: jdbc:h2:mem:moneydb
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  h2:
+    console:
+      enabled: true
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+    show-sql: true
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+    # Producer 설정 (기존)
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+    # Consumer 설정 추가
+    consumer:
+      group-id: account-service
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        # DTO 패키지를 trusted로 등록
+        spring.json.trusted.packages: "com.eouil.msa.shared.kafka"
+        # 메시지에 __TypeId__ 헤더가 없다면 기본 타입 지정 (옵션)
+        spring.json.value.default.type: com.eouil.msa.shared.kafka.UserCreatedEvent
+
+jwt:
+  secret: ${JWT_SECRET}

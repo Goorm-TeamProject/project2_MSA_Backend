@@ -16,7 +16,7 @@ import static com.eouil.msa.users.utils.MaskingUtil.maskToken;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api")
+@RequestMapping("/users")
 public class AuthController {
 
     private final AuthService authService;
@@ -99,6 +99,6 @@ public class AuthController {
 
     @GetMapping("/health")
     public ResponseEntity<String> healthCheck() {
-        return ResponseEntity.ok("ALB Health Check OK");
+        return ResponseEntity.ok("ALB User-service Health Check OK");
     }
 }

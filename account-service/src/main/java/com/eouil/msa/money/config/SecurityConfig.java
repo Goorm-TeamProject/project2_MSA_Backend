@@ -1,7 +1,6 @@
-package com.eouil.msa.users.config;
+package com.eouil.msa.money.config;
 
 import com.eouil.msa.shared.jwt.JwtAuthenticationFilter;
-import com.eouil.msa.shared.jwt.JwtUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -31,8 +30,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/users/join", "/users/login", "/users/refresh").permitAll()
-                        .requestMatchers("/users/mfa/**").permitAll()
+                        .requestMatchers("/api/accounts/**","/api/transactions/**").permitAll()
+                        //.requestMatchers("/api/users/mfa/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

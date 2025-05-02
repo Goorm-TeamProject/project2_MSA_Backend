@@ -33,7 +33,7 @@ public class AuthService {
     private final RedisTemplate<String, String> redisTemplate;
     private  final RedisTokenService redisTokenService;
     private final JwtUtil jwtUtil;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final KafkaTemplate<String, UserCreatedEvent> kafkaTemplate;
 
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
@@ -41,7 +41,7 @@ public class AuthService {
                        RedisTemplate<String, String> redisTemplate,
                        RedisTokenService redisTokenService,
                        JwtUtil jwtUtil,
-                       KafkaTemplate<String, Object> kafkaTemplate) {
+                       KafkaTemplate<String, UserCreatedEvent> kafkaTemplate) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.env = env;
@@ -50,6 +50,7 @@ public class AuthService {
         this.jwtUtil = jwtUtil;
         this.kafkaTemplate = kafkaTemplate;
     }
+
 
     public boolean isLocal() {
         return Arrays.asList(env.getActiveProfiles()).contains("local");
