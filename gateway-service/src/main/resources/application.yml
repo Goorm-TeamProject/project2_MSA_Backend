@@ -1,0 +1,46 @@
+spring:
+  main:
+    web-application-type: reactive
+
+  cloud:
+    gateway:
+      routes:
+        - id: user-service-users
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/users/**
+
+        - id: user-service-mfa
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/mfa/**
+
+        - id: transaction-service
+          uri: http://localhost:8082
+          predicates:
+            - Path=/api/transactions/**
+
+        - id: accounts-service
+          uri: http://localhost:8082
+          predicates:
+            - Path=/api/accounts/**
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:5173"
+            allowedMethods:
+              - "GET"
+              - "POST"
+              - "PUT"
+              - "DELETE"
+              - "OPTIONS"
+            allowedHeaders:
+              - "*"
+            allowCredentials: true
+
+server:
+  port: 8080
+
+jwt:
+  secret: ${JWT_SECRET}

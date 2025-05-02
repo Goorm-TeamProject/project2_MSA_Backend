@@ -1,5 +1,5 @@
 plugins {
-    id 'org.springframework.boot' version '3.4.4'
+    id 'org.springframework.boot' version '3.3.5'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'java'
 }
@@ -50,6 +50,9 @@ dependencies {
     //redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'io.lettuce:lettuce-core' // Lettuce 클라이언트 사용 시
+
+    //kafka
+    implementation 'org.springframework.kafka:spring-kafka'
 }
 
 test {
