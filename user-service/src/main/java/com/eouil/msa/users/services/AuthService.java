@@ -13,8 +13,6 @@ import com.eouil.msa.users.exceptions.*;
 import com.eouil.msa.users.repositories.UserRepository;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.core.env.Environment;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -31,7 +29,7 @@ public class AuthService {
     private final GoogleAuthenticator gAuth = new GoogleAuthenticator();
     private final Environment env;
     private final RedisTemplate<String, String> redisTemplate;
-    private  final RedisTokenService redisTokenService;
+    private final RedisTokenService redisTokenService;
     private final JwtUtil jwtUtil;
     private final KafkaTemplate<String, UserCreatedEvent> kafkaTemplate;
 
@@ -90,12 +88,13 @@ public class AuthService {
             throw new InvalidPasswordException();
         }
 
-        String accessToken = jwtUtil.generateAccessToken(user.getUserId());
+        boolean mfaRegistered = user.getMfaSecret() != null;
+
+        String accessToken = jwtUtil.generateAccessToken(user.getUserId(), mfaRegistered);
         String refreshToken = jwtUtil.generateRefreshToken(user.getUserId());
 
         redisTokenService.saveRefreshToken(user.getUserId(), refreshToken, jwtUtil.getRefreshTokenExpireMillis());
 
-        boolean mfaRegistered = user.getMfaSecret() != null;
         log.info("[LOGIN] 성공 - userId: {}, MFA 등록 여부: {}", user.getUserId(), mfaRegistered);
         return new LoginResponse(accessToken, refreshToken, mfaRegistered);
     }
@@ -113,8 +112,8 @@ public class AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(userId));
 
-        String newAccessToken = jwtUtil.generateAccessToken(userId);
         boolean mfaRegistered = user.getMfaSecret() != null;
+        String newAccessToken = jwtUtil.generateAccessToken(userId, mfaRegistered);
 
         return new LoginResponse(newAccessToken, refreshToken, mfaRegistered);
     }
@@ -185,5 +184,9 @@ public class AuthService {
         }
     }
 
-
+    public String getUserIdByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .map(User::getUserId)
+                .orElseThrow(() -> new UserNotFoundException(email));
+    }
 }

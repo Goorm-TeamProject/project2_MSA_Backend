@@ -1,46 +1,70 @@
-spring:
-  main:
-    web-application-type: reactive
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.security: DEBUG
+    reactor.netty.http.client: DEBUG
+    com.eouil.msa.gateway: DEBUG
 
+spring:
   cloud:
     gateway:
-      routes:
-        - id: user-service-users
-          uri: http://localhost:8081
-          predicates:
-            - Path=/api/users/**
-
-        - id: user-service-mfa
-          uri: http://localhost:8081
-          predicates:
-            - Path=/api/mfa/**
-
-        - id: transaction-service
-          uri: http://localhost:8082
-          predicates:
-            - Path=/api/transactions/**
-
-        - id: accounts-service
-          uri: http://localhost:8082
-          predicates:
-            - Path=/api/accounts/**
       globalcors:
         corsConfigurations:
           '[/**]':
             allowedOrigins:
               - "http://localhost:5173"
             allowedMethods:
-              - "GET"
-              - "POST"
-              - "PUT"
-              - "DELETE"
-              - "OPTIONS"
-            allowedHeaders:
-              - "*"
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
             allowCredentials: true
+            exposedHeaders:
+              - "Set-Cookie"
+      routes:
+        - id: users-public
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/users/join, /api/users/login, /api/users/refresh, /api/users/mfa/**
 
-server:
-  port: 8080
+        - id: users-protected
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - RemoveRequestHeader=Authorization
+            - name: RequestHeaderToRequestUri
+              args:
+                name: Cookie
+                match: .*accessToken=([^1]*).*
+                value: Bearer $1
+                headerName: Authorization
 
-jwt:
-  secret: ${JWT_SECRET}
+        - id: accounts
+          uri: http://localhost:8082
+          predicates:
+            - Path=/api/accounts/**
+          filters:
+            - RemoveRequestHeader=Authorization
+            - name: RequestHeaderToRequestUri
+              args:
+                name: Cookie
+                match: .*accessToken=([^1]*).*
+                value: Bearer $1
+                headerName: Authorization
+
+        - id: transactions
+          uri: http://localhost:8082
+          predicates:
+            - Path=/api/transactions/**
+          filters:
+            - RemoveRequestHeader=Authorization
+            - name: RequestHeaderToRequestUri
+              args:
+                name: Cookie
+                match: .*accessToken=([^1]*).*
+                value: Bearer $1
+                headerName: Authorization

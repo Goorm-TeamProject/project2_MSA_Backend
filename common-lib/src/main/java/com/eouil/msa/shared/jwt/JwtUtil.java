@@ -6,9 +6,12 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
+import java.util.Collections;
 import java.util.Date;
 
 @Component
@@ -23,13 +26,33 @@ public class JwtUtil {
     }
 
     // access token
-    public String generateAccessToken(String userId) {
-        return Jwts.builder()
-                .setSubject(userId)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + ACCESS_EXP))
-                .signWith(key, SignatureAlgorithm.HS256)
-                .compact();
+    public String generateAccessToken(String userId, boolean mfaVerified) {
+        try {
+            String token = Jwts.builder()
+                    .setSubject(userId)
+                    .claim("mfaVerified", mfaVerified)
+                    .setIssuedAt(new Date())
+                    .setExpiration(new Date(System.currentTimeMillis() + ACCESS_EXP))
+                    .signWith(key, SignatureAlgorithm.HS256)
+                    .compact();
+
+            return token;
+        } catch (Exception e) {
+            throw new RuntimeException("accessToken 생성 실패", e);
+        }
+    }
+
+    public Authentication validateTokenAndGetAuthentication(String token) {
+        // 1) 토큰에서 userId 추출
+        String userId = validateTokenAndGetUserId(token);
+
+        // 2) 추출된 userId로 Authentication 객체 생성
+        //    권한이 없다면 빈 리스트, 필요시 Roles/Authorities를 claim에서 꺼내 세팅
+        return new UsernamePasswordAuthenticationToken(
+                userId,          // principal
+                null,            // credentials
+                Collections.emptyList() // authorities
+        );
     }
 
     // refresh token
