@@ -8,26 +8,12 @@ import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServic
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 
-@SpringBootApplication(
-        scanBasePackages = {
-                "com.eouil.msa.gateway",
-                "com.eouil.msa.shared" // 여기에 jwt도 있으니까 조심
-        },
-        exclude = {
-                SecurityAutoConfiguration.class,
-                UserDetailsServiceAutoConfiguration.class
-        }
-)
-@ComponentScan(
-        basePackages = {
-                "com.eouil.msa.gateway",
-                "com.eouil.msa.shared"
-        },
-        excludeFilters = @ComponentScan.Filter(
-                type = FilterType.REGEX,
-                pattern = "com\\.eouil\\.msa\\.shared\\.jwt\\.JwtAuthenticationFilter"
-        )
-)
+
+@SpringBootApplication
+@ComponentScan(basePackages = {
+        "com.eouil.msa.gateway",
+        "com.eouil.msa.shared"
+})
 public class GatewayApplication {
     public static void main(String[] args) {
         SpringApplication.run(GatewayApplication.class, args);
