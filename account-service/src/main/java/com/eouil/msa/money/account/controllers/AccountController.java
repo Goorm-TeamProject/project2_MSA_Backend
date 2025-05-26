@@ -4,7 +4,6 @@ import com.eouil.msa.money.account.dtos.CreateAccountRequest;
 import com.eouil.msa.money.account.dtos.CreateAccountResponse;
 import com.eouil.msa.money.account.dtos.GetMyAccountResponse;
 import com.eouil.msa.money.account.services.AccountService;
-import com.eouil.msa.shared.security.CustomUserPrincipal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

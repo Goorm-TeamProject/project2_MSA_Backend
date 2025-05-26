@@ -10,6 +10,10 @@ import org.springframework.context.annotation.FilterType;
 
 
 @SpringBootApplication
+@ComponentScan(basePackages = {
+        "com.eouil.msa.gateway",
+        "com.eouil.msa.shared"
+})
 public class GatewayApplication {
     public static void main(String[] args) {
         SpringApplication.run(GatewayApplication.class, args);

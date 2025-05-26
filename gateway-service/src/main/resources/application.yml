@@ -1,15 +1,20 @@
 logging:
   level:
     root: INFO
-    org.springframework.cloud.gateway: DEBUG
+    org.springframework.cloud.gateway: TRACE
+    org.springframework.http.server.reactive: DEBUG
+    org.springframework.web.reactive: DEBUG
     org.springframework.security: DEBUG
+    reactor.netty: DEBUG
     reactor.netty.http.client: DEBUG
     com.eouil.msa.gateway: DEBUG
 
 spring:
   cloud:
     gateway:
+      # 1) 전역 CORS 설정
       globalcors:
+        add-to-simple-url-handler-mapping: true
         corsConfigurations:
           '[/**]':
             allowedOrigins:
@@ -24,47 +29,44 @@ spring:
             allowCredentials: true
             exposedHeaders:
               - "Set-Cookie"
+              - "Authorization"
+            maxAge: 3600  # preflight 캐시 시간 설정
+
+      # 2) 라우팅
       routes:
-        - id: users-public
+        # (A) user-public: 로그인/회원가입 → CookieToHeader만 필요
+        - id: user-public
           uri: http://localhost:8081
           predicates:
-            - Path=/api/users/join, /api/users/login, /api/users/refresh, /api/users/mfa/**
+            - Path=/api/users/join, /api/users/login, /api/users/logout
+            - Method=POST
+          filters:
+            - PreserveSetCookie
 
-        - id: users-protected
+        # (B) user-service
+        - id: user-service
           uri: http://localhost:8081
           predicates:
             - Path=/api/users/**
           filters:
-            - RemoveRequestHeader=Authorization
-            - name: RequestHeaderToRequestUri
-              args:
-                name: Cookie
-                match: .*accessToken=([^1]*).*
-                value: Bearer $1
-                headerName: Authorization
+            - CookieToHeader
+            - AuthorizationHeader
+            - RewritePath=/api/users/(?<segment>.*), /$\{segment}
 
+        # (C) accounts
         - id: accounts
           uri: http://localhost:8082
           predicates:
             - Path=/api/accounts/**
           filters:
-            - RemoveRequestHeader=Authorization
-            - name: RequestHeaderToRequestUri
-              args:
-                name: Cookie
-                match: .*accessToken=([^1]*).*
-                value: Bearer $1
-                headerName: Authorization
+            - CookieToHeader
+            - AuthorizationHeader
 
+        # (D) transactions
         - id: transactions
           uri: http://localhost:8082
           predicates:
             - Path=/api/transactions/**
           filters:
-            - RemoveRequestHeader=Authorization
-            - name: RequestHeaderToRequestUri
-              args:
-                name: Cookie
-                match: .*accessToken=([^1]*).*
-                value: Bearer $1
-                headerName: Authorization
+            - CookieToHeader
+            - AuthorizationHeader

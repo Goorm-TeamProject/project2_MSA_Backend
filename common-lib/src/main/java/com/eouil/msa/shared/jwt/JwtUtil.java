@@ -4,39 +4,47 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.env.Environment;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.Date;
 
 @Component
+@Slf4j
 public class JwtUtil {
     private final Key key;
     private final long ACCESS_EXP = 1000 * 60 * 5;  // 5분
     private final long REFRESH_EXP = 1000 * 60 * 60 * 24 * 7; // 7일
 
 
-    public JwtUtil(@Value("${jwt.secret}") String secretKey) {
-        this.key = Keys.hmacShaKeyFor(secretKey.getBytes());
+    public JwtUtil(@Value("${jwt.secret}") String secretKey, Environment env) {
+
+        byte[] decodedKey = Base64.getDecoder().decode(secretKey);
+        this.key = Keys.hmacShaKeyFor(decodedKey);
+        // 환경변수 확인 로그
+
+        System.out.println("[JWT] Loaded JWT_SECRET: " + env.getProperty("jwt.secret"));
+        // 또는 로그 사용
+        log.info("[JWT] Loaded JWT_SECRET: {}", env.getProperty("jwt.secret"));
     }
 
     // access token
-    public String generateAccessToken(String userId, boolean mfaVerified) {
+    public String generateAccessToken(String userId) {
         try {
-            String token = Jwts.builder()
+            return Jwts.builder()
                     .setSubject(userId)
-                    .claim("mfaVerified", mfaVerified)
                     .setIssuedAt(new Date())
                     .setExpiration(new Date(System.currentTimeMillis() + ACCESS_EXP))
-                    .signWith(key, SignatureAlgorithm.HS256)
+                    .signWith(key, SignatureAlgorithm.HS512)
                     .compact();
-
-            return token;
         } catch (Exception e) {
             throw new RuntimeException("accessToken 생성 실패", e);
         }
@@ -61,7 +69,7 @@ public class JwtUtil {
                 .setSubject(userId)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + REFRESH_EXP))
-                .signWith(key, SignatureAlgorithm.HS256)
+                .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
     }
 

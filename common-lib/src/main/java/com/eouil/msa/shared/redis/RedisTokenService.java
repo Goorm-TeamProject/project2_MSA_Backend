@@ -1,6 +1,7 @@
 package com.eouil.msa.shared.redis;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -8,6 +9,7 @@ import java.time.Duration;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RedisTokenService {
     private final RedisTemplate<String, String> redisTemplate;
 
@@ -35,6 +37,8 @@ public class RedisTokenService {
 
     // 블랙리스트 조회
     public boolean isBlacklisted(String accessToken) {
+        boolean result = redisTemplate.hasKey(accessToken);
+        log.debug("[RedisTokenService] 토큰 {} 블랙리스트 여부: {}", accessToken, result);
         return redisTemplate.hasKey("BL:" + accessToken);
     }
 }
