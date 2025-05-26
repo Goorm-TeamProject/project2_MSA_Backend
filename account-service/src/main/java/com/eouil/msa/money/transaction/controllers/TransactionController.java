@@ -1,3 +1,4 @@
+// 📁 money-service/src/main/java/com/eouil/msa/money/transaction/controllers/TransactionController.java
 package com.eouil.msa.money.transaction.controllers;
 
 import com.eouil.msa.money.transaction.dtos.*;
@@ -5,13 +6,14 @@ import com.eouil.msa.money.transaction.services.TransactionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/transactions")
+@RequestMapping("/api/transactions")
 @RequiredArgsConstructor
 public class TransactionController {
 
@@ -20,19 +22,19 @@ public class TransactionController {
     @PostMapping("/transfer")
     public ResponseEntity<List<TransferResponseDTO>> transfer(
             @RequestBody TransferRequestDTO req,
-            @RequestHeader("Authorization") String token
+            @AuthenticationPrincipal String userId
     ) {
-        List<TransferResponseDTO> result = transactionService.transfer(req, token);
+        List<TransferResponseDTO> result = transactionService.transfer(req, userId);
         return ResponseEntity.ok(result);
     }
 
     @PostMapping("/withdraw")
     public ResponseEntity<TransferResponseDTO> withdraw(
             @RequestBody WithdrawRequestDTO request,
-            @RequestHeader("Authorization") String token
+            @AuthenticationPrincipal String userId
     ) {
         log.info("[POST /withdraw] 요청 도착: {}", request);
-        TransferResponseDTO response = transactionService.withdraw(request, token);
+        TransferResponseDTO response = transactionService.withdraw(request, userId);
         log.info("[POST /withdraw] 처리 완료: {}", response);
         return ResponseEntity.ok(response);
     }
@@ -40,21 +42,20 @@ public class TransactionController {
     @PostMapping("/deposit")
     public ResponseEntity<TransferResponseDTO> deposit(
             @RequestBody DepositRequestDTO request,
-            @RequestHeader("Authorization") String token
+            @AuthenticationPrincipal String userId
     ) {
         log.info("[POST /deposit] 요청 도착: {}", request);
-        TransferResponseDTO response = transactionService.deposit(request, token);
+        TransferResponseDTO response = transactionService.deposit(request, userId);
         log.info("[POST /deposit] 처리 완료: {}", response);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping
     public ResponseEntity<List<TransferResponseDTO>> getTransactions(
-            @RequestHeader("Authorization") String authorizationHeader
+            @AuthenticationPrincipal String userId
     ) {
-        String token = authorizationHeader.replace("Bearer ", "");
-        log.info("[GET /transactions] 요청 도착 (토큰: {})", token.substring(0, Math.min(token.length(), 10)) + "...");
-        List<TransferResponseDTO> transactions = transactionService.getTransactions(token);
+        log.info("[GET /transactions] 사용자 ID: {}", userId);
+        List<TransferResponseDTO> transactions = transactionService.getTransactions(userId);
         log.info("[GET /transactions] 조회 완료: {}건", transactions.size());
         return ResponseEntity.ok(transactions);
     }

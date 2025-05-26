@@ -7,6 +7,7 @@ import com.eouil.msa.money.account.dtos.CreateAccountResponse;
 import com.eouil.msa.money.account.dtos.GetMyAccountResponse;
 import com.eouil.msa.money.account.repositories.AccountRepository;
 import com.eouil.msa.shared.jwt.JwtUtil;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,21 +16,17 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class AccountService {
+
     private final AccountRepository accountRepository;
-    private final JwtUtil jwtUtil;
 
-    public AccountService(AccountRepository accountRepository, JwtUtil jwtUtil) {
-        this.accountRepository = accountRepository;
-        this.jwtUtil = jwtUtil;
-    }
-
-    public List<GetMyAccountResponse> getMyaccount(String token) {
-        String userId = jwtUtil.validateTokenAndGetUserId(token);
-        log.info("[GET MY ACCOUNT] 요청 - userId: {}", userId);
+    public List<GetMyAccountResponse> getMyaccount(String userId) {
+        log.info("[GET MY ACCOUNT] userId: {}", userId);
 
         List<Account> accountList = accountRepository.findByUserId(userId);
 
@@ -43,15 +40,16 @@ public class AccountService {
     }
 
     public CreateAccountResponse createAccount(CreateAccountRequest request, String userId) {
-        log.info("[CREATE ACCOUNT] 요청 - userId: {}", userId);
+        log.info("[CREATE ACCOUNT] 요청 userId: {}", userId);
 
         String accountNumber = generateUniqueAccountNumber();
 
-        Account account = new Account();
-        account.setAccountNumber(accountNumber);
-        account.setUserId(userId);
-        account.setBalance(request.getBalance() != null ? request.getBalance() : BigDecimal.ZERO);
-        account.setCreatedAt(LocalDateTime.now());
+        Account account = Account.builder()
+                .accountNumber(accountNumber)
+                .userId(userId)
+                .balance(Optional.ofNullable(request.getBalance()).orElse(BigDecimal.ZERO))
+                .createdAt(LocalDateTime.now())
+                .build();
 
         accountRepository.save(account);
 
@@ -63,11 +61,19 @@ public class AccountService {
         );
     }
 
+    private String generateUniqueAccountNumber() {
+        for (int i = 0; i < 10; i++) {
+            String number = String.valueOf(10000000000000L + (long) (Math.random() * 89999999999999L));
+            if (!accountRepository.existsByAccountNumber(number)) return number;
+        }
+        throw new IllegalStateException("유효한 계좌번호를 생성할 수 없습니다.");
+    }
+
     @Transactional
     public Account withdraw(String accountNumber, BigDecimal amount) {
         Account account = accountRepository.findByAccountNumberForUpdate(accountNumber);
         if (account.getBalance().compareTo(amount) < 0) {
-            throw new RuntimeException("Insufficient funds");
+            throw new IllegalArgumentException("잔액 부족");
         }
         account.setBalance(account.getBalance().subtract(amount));
         return accountRepository.save(account);
@@ -79,14 +85,4 @@ public class AccountService {
         account.setBalance(account.getBalance().add(amount));
         return accountRepository.save(account);
     }
-
-    private String generateUniqueAccountNumber() {
-        String number;
-        do {
-            number = String.valueOf(10000000000000L + (long) (Math.random() * 89999999999999L));
-        } while (accountRepository.existsByAccountNumber(number));
-        return number;
-    }
-
-
 }
