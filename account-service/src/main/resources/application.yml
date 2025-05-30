@@ -1,51 +1,25 @@
 logging:
   level:
     root: INFO
-    com.eouil.msa.money.account.controllers: DEBUG
+    com.eouil.msa.money.account.controllers: INFO # 기본 INFO 레벨
 
 server:
   port: 8082
 
 spring:
+  profiles:
+    active: dev
   config:
-    import: optional:aws-secretsmanager:/eouil
-
-  datasource:
-    url: jdbc:h2:mem:moneydb
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
-
-  h2:
-    console:
-      enabled: true
-
-  data:
-    redis:
-      host: localhost # Redis는 localhost로 접근 가능
-      port: 6379
+    import: optional:aws-secretsmanager:/eouil-au # 프로덕션 환경에서 Secrets Manager 사용
 
   jpa:
-    hibernate:
-      ddl-auto: update
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
-    show-sql: true
+        dialect: org.hibernate.dialect.H2Dialect # 기본 JPA 방언
 
   kafka:
-    bootstrap-servers: localhost:9092 #
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-    consumer:
-      group-id: account-service
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      properties:
-        spring.json.trusted.packages: "com.eouil.msa.shared.kafka"
-        spring.json.value.default.type: com.eouil.msa.shared.kafka.UserCreatedEvent
+    bootstrap-servers: localhost:9092 # 기본 Kafka 브로커 주소
 
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET} # 환경 변수에서 JWT 시크릿 키를 읽어옴
+  expiration_time: 600000
