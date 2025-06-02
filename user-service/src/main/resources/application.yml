@@ -12,7 +12,7 @@ logging:
 
 spring:
   profiles:
-    active: dev
+    active: prod
   config:
     import: optional:aws-secretsmanager:/eouil-au # 프로덕션 환경에서 Secrets Manager 사용
 
