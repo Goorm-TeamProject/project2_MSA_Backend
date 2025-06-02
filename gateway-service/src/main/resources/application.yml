@@ -1,15 +1,10 @@
-logging:
-  level:
-    root: INFO
-    org.springframework.cloud.gateway: TRACE
-    org.springframework.http.server.reactive: DEBUG
-    org.springframework.web.reactive: DEBUG
-    org.springframework.security: DEBUG
-    reactor.netty: DEBUG
-    reactor.netty.http.client: DEBUG
-    com.eouil.msa.gateway: DEBUG
-
 spring:
+  profiles:
+    active: prod
+
+  server:
+    port: 8080
+
   cloud:
     gateway:
       globalcors:
@@ -19,6 +14,7 @@ spring:
             allowedOrigins:
               - "http://localhost:5173"
               - "https://app.eouil.com"
+              - "https://eouil.com"
               - "https://api.eouil.com"
             allowedMethods:
               - GET
@@ -32,41 +28,3 @@ spring:
               - "Set-Cookie"
               - "Authorization"
             maxAge: 3600
-
-      routes:
-        - id: user-public
-          uri: http://localhost:8081
-          predicates:
-            - Path=/api/users/join, /api/users/login, /api/users/logout
-            - Host=api.eouil.com
-            - Method=POST
-          filters:
-            - PreserveSetCookie
-
-        - id: user-service
-          uri: http://localhost:8081
-          predicates:
-            - Path=/api/users/**
-            - Host=api.eouil.com
-          filters:
-            - CookieToHeader
-            - AuthorizationHeader
-            - RewritePath=/api/users/(?<segment>.*), /${segment}
-
-        - id: accounts
-          uri: http://localhost:8082
-          predicates:
-            - Path=/api/accounts/**
-            - Host=api.eouil.com
-          filters:
-            - CookieToHeader
-            - AuthorizationHeader
-
-        - id: transactions
-          uri: http://localhost:8082
-          predicates:
-            - Path=/api/transactions/**
-            - Host=api.eouil.com
-          filters:
-            - CookieToHeader
-            - AuthorizationHeader
