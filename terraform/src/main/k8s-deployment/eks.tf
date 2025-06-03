@@ -29,9 +29,9 @@ module "eks" {
       additional_security_group_ids = var.extra_node_security_groups
     }
   }
-
   enable_irsa = true
 }
+
 
 data "aws_eks_cluster_auth" "cluster" {
   name = module.eks.cluster_id
