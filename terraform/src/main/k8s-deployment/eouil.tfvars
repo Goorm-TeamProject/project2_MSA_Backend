@@ -1,0 +1,5 @@
+aws_region = "ap-northeast-2"
+cluster_name = "Eouil-eks-cluster"
+domain_name = "api.eouil.com"
+hosted_zone_id = "Z03460451200V9S9DBYC"
+static_bucket = "bank-s3-web-static-01"

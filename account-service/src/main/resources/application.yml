@@ -1,0 +1,23 @@
+logging:
+  level:
+    root: INFO
+    com.eouil.msa.money.account.controllers: INFO # 기본 INFO 레벨
+
+server:
+  port: 8082
+
+spring:
+  profiles:
+    active: prod
+  config:
+    import: optional:aws-secretsmanager:/eouil-au # 프로덕션 환경에서 Secrets Manager 사용
+
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect # 기본 JPA 방언
+
+
+jwt:
+  secret: ${JWT_SECRET} # 환경 변수에서 JWT 시크릿 키를 읽어옴
+  expiration_time: 600000

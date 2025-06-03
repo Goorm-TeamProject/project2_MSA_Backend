@@ -13,8 +13,6 @@ import com.eouil.msa.users.exceptions.*;
 import com.eouil.msa.users.repositories.UserRepository;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.core.env.Environment;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -31,9 +29,9 @@ public class AuthService {
     private final GoogleAuthenticator gAuth = new GoogleAuthenticator();
     private final Environment env;
     private final RedisTemplate<String, String> redisTemplate;
-    private  final RedisTokenService redisTokenService;
+    private final RedisTokenService redisTokenService;
     private final JwtUtil jwtUtil;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final KafkaTemplate<String, UserCreatedEvent> kafkaTemplate;
 
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
@@ -41,7 +39,7 @@ public class AuthService {
                        RedisTemplate<String, String> redisTemplate,
                        RedisTokenService redisTokenService,
                        JwtUtil jwtUtil,
-                       KafkaTemplate<String, Object> kafkaTemplate) {
+                       KafkaTemplate<String, UserCreatedEvent> kafkaTemplate) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.env = env;
@@ -50,6 +48,7 @@ public class AuthService {
         this.jwtUtil = jwtUtil;
         this.kafkaTemplate = kafkaTemplate;
     }
+
 
     public boolean isLocal() {
         return Arrays.asList(env.getActiveProfiles()).contains("local");
@@ -94,29 +93,10 @@ public class AuthService {
 
         redisTokenService.saveRefreshToken(user.getUserId(), refreshToken, jwtUtil.getRefreshTokenExpireMillis());
 
-        boolean mfaRegistered = user.getMfaSecret() != null;
-        log.info("[LOGIN] 성공 - userId: {}, MFA 등록 여부: {}", user.getUserId(), mfaRegistered);
-        return new LoginResponse(accessToken, refreshToken, mfaRegistered);
+        log.info("[LOGIN] 성공 - userId: {}", user.getUserId());
+        return new LoginResponse(accessToken, refreshToken);
     }
 
-    public LoginResponse refreshAccessToken(String refreshToken) {
-        log.info("[REFRESH] 요청");
-
-        String userId = jwtUtil.validateTokenAndGetUserId(refreshToken);
-        String storedRefreshToken = redisTokenService.getRefreshToken(userId);
-
-        if (storedRefreshToken == null || !storedRefreshToken.equals(refreshToken)) {
-            throw new InvalidRefreshTokenException();
-        }
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
-
-        String newAccessToken = jwtUtil.generateAccessToken(userId);
-        boolean mfaRegistered = user.getMfaSecret() != null;
-
-        return new LoginResponse(newAccessToken, refreshToken, mfaRegistered);
-    }
 
     public void logout(String token) {
         log.info("[LOGOUT] 요청");
@@ -133,38 +113,21 @@ public class AuthService {
         log.info("[LOGOUT] 완료 - userId: {}", userId);
     }
 
-    public String generateOtpUrlByToken(String token) {
-        String userId = jwtUtil.validateTokenAndGetUserId(token);
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
+    public LoginResponse refreshAccessToken(String refreshToken) {
+        log.info("[REFRESH] 요청");
 
-        String secret = gAuth.createCredentials().getKey();
-        try {
-            saveSecret(user, secret);
-        } catch (Exception e) {
-            log.warn("Redis 저장 실패 → fallback to H2 저장: {}", e.getMessage());
-            saveSecretToH2(user.getEmail(), secret);
+        String userId = jwtUtil.validateTokenAndGetUserId(refreshToken);
+        String storedRefreshToken = redisTokenService.getRefreshToken(userId);
+
+        if (storedRefreshToken == null || !storedRefreshToken.equals(refreshToken)) {
+            throw new InvalidRefreshTokenException();
         }
 
-        return String.format("otpauth://totp/%s?secret=%s&issuer=EouilBank", user.getEmail(), secret);
+        String newAccessToken = jwtUtil.generateAccessToken(userId);
+
+        return new LoginResponse(newAccessToken, refreshToken);
     }
 
-    public boolean verifyCode(String email, int code) {
-        String secret = isLocal() ? getSecretFromH2(email) : getSecretFromRedis(email);
-        return gAuth.authorize(secret, code);
-    }
-
-    private void saveSecretToH2(String email, String secret) {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException(email));
-        user.setMfaSecret(secret);
-        userRepository.save(user);
-    }
-
-    private String getSecretFromH2(String email) {
-        return userRepository.findByEmail(email)
-                .map(User::getMfaSecret)
-                .orElseThrow(() -> new MfaSecretNotFoundException("H2에서 " + email));
-    }
 
     private void saveSecretToRedis(String email, String secret) {
         redisTemplate.opsForHash().put("MFA:SECRETS", email, secret);
@@ -176,13 +139,10 @@ public class AuthService {
         return (String) secret;
     }
 
-    private void saveSecret(User user, String secret) {
-        if (isLocal()) {
-            saveSecretToH2(user.getEmail(), secret);
-        } else {
-            saveSecretToRedis(user.getEmail(), secret);
-        }
+
+    public String getUserIdByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .map(User::getUserId)
+                .orElseThrow(() -> new UserNotFoundException(email));
     }
-
-
 }

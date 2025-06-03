@@ -1,5 +1,5 @@
 plugins {
-    id 'org.springframework.boot' version '3.4.4'
+    id 'org.springframework.boot' version '3.3.5'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'java'
 }
@@ -8,18 +8,73 @@ group = 'com.eouil'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '17'
 
+ext {
+    set('springCloudVersion', "2023.0.1")  // ★ 추가: Spring Cloud BOM 버전 지정
+}
+
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter' //
-    implementation 'org.springframework.boot:spring-boot-starter-web' // 웹 서비스용이면 추가
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
 
-    testImplementation platform('org.junit:junit-bom:5.10.0')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
+    // DB
+    implementation 'com.mysql:mysql-connector-j:8.0.33'
+    runtimeOnly 'com.mysql:mysql-connector-j'
+    implementation 'com.h2database:h2'
+
+    // Validation & JWT
+    implementation 'jakarta.validation:jakarta.validation-api:3.0.0'
+    implementation 'org.hibernate.validator:hibernate-validator:6.2.5.Final'
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+
+    // dotenv 환경변수 적용
+    implementation 'io.github.cdimascio:java-dotenv:5.2.2'
+
+    // Lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // Test
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'org.mockito:mockito-junit-jupiter:4.11.0'
+    testImplementation 'org.mockito:mockito-inline:4.11.0'
+
+    // Google MFA
+    implementation 'com.warrenstrange:googleauth:1.4.0'
+
+    // Redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'io.lettuce:lettuce-core'
+
+    // Kafka
+    implementation 'org.springframework.kafka:spring-kafka'
+
+    // MSA 공유 라이브러리
+    implementation project(":common-lib")
+
+    // ★ Feign Client (Spring Cloud OpenFeign)
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"  // ★ 추가
+    }
 }
 
 test {
     useJUnitPlatform()
+}
+
+bootJar {
+    archiveFileName = 'app.jar'
 }

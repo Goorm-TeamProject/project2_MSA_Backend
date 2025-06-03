@@ -22,6 +22,4 @@ public class User{
     private String email;
     @Column(length = 100, nullable = false)
     private String password;
-    //Google MFA
-    private String mfaSecret;
 }

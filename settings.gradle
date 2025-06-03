@@ -5,4 +5,6 @@ include 'transaction-service'
 include 'log-service'
 include 'common-lib'
 include 'common-lib'
+include 'gateway-service'
+include 'terraform'
 

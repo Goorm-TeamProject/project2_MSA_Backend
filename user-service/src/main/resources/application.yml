@@ -1,20 +1,29 @@
-spring:
-  config:
-    import: optional:aws-secretsmanager:/eouil
+server:
+  port: 8081
+  servlet:
+    context-path: /
 
-  datasource:
-    url: jdbc:h2:mem:testdb
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
+logging:
+  level:
+    root: INFO
+    com.eouil.msa.users: INFO # 기본 INFO 레벨
+    org.springframework.security: INFO
+    org.springframework.web: INFO
+
+spring:
+  profiles:
+    active: prod
+  config:
+    import: optional:aws-secretsmanager:/eouil-au # 프로덕션 환경에서 Secrets Manager 사용
 
   jpa:
-    hibernate:
-      ddl-auto: create-drop
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
-    show-sql: true
+        dialect: org.hibernate.dialect.H2Dialect # 기본 JPA 방언
 
-    jwt:
-      secret: ${JWT_SECRET}
+  kafka:
+    bootstrap-servers: localhost:9092 # 기본 Kafka 브로커 주소
+
+jwt:
+  secret: ${JWT_SECRET} # 환경 변수에서 JWT 시크릿 키를 읽어옴
+  expiration_time: 600000
