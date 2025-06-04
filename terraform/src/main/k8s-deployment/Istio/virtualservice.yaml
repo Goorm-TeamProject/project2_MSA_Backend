@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: myapp-vs
+  namespace: default
+spec:
+  hosts:
+    - "myapp.example.com"
+  gateways:
+    - myapp-gateway
+  http:
+    - match:
+        - uri:
+            prefix: "/"
+      route:
+        - destination:
+            host: myapp-service.default.svc.cluster.local   # 서비스 FQDN
+            port:
+              number: 80
