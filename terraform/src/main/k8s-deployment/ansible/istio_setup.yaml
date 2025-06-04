@@ -1,0 +1,21 @@
+- name: Install Istio on EKS
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Create istio-system namespace
+      shell: kubectl create namespace istio-system
+      ignore_errors: yes
+
+    - name: Install Istio via istioctl
+      shell: istioctl install --set profile=default -y
+
+    - name: Enable sidecar injection in default namespace
+      shell: kubectl label namespace default istio-injection=enabled --overwrite
+
+    - name: Apply Istio Gateway
+      shell: kubectl apply -f istio/gateway.yaml
+      when: ansible_facts['distribution'] == 'Ubuntu'  # 조건 예시
+
+    - name: Apply Istio VirtualService
+      shell: kubectl apply -f istio/virtualservice.yaml
+      when: ansible_facts['distribution'] == 'Ubuntu'

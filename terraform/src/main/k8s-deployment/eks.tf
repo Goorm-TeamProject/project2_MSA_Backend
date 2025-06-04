@@ -14,7 +14,7 @@ module "eks" {
   version = "19.0.0"
 
   cluster_name    = var.cluster_name
-  cluster_version = "1.27"
+  cluster_version = "1.33"
   vpc_id          = data.aws_vpc.default.id
   subnet_ids      = data.aws_subnets.default.ids
 
@@ -30,11 +30,14 @@ module "eks" {
     }
   }
   enable_irsa = true
+
+  cluster_endpoint_public_access        = true
+  cluster_endpoint_public_access_cidrs  = ["218.235.249.173/32"]
 }
 
 
 data "aws_eks_cluster_auth" "cluster" {
-  name = module.eks.cluster_id
+  name = module.eks.cluster_name
 }
 
 resource "kubernetes_service_account" "aws_lb_controller" {
