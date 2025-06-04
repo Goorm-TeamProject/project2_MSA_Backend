@@ -29,6 +29,7 @@ module "eks" {
       additional_security_group_ids = var.extra_node_security_groups
     }
   }
+
   enable_irsa = true
 
   cluster_endpoint_public_access        = true
@@ -38,7 +39,6 @@ module "eks" {
 
 data "aws_eks_cluster_auth" "cluster" {
   name = module.eks.cluster_name
-}
 
 resource "kubernetes_service_account" "aws_lb_controller" {
   metadata {
