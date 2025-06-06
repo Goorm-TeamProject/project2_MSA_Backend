@@ -1,0 +1,8 @@
+architecture: standalone
+master:
+  persistence:
+    enabled: true
+    size: 1Gi
+    storageClass: gp3
+  auth:
+    enabled: false

@@ -1,0 +1,82 @@
+gatewayService:
+  image:
+    repository: 640168458081.dkr.ecr.ap-northeast-2.amazonaws.com/eouil-gateway-service
+    tag: "1.0.0"
+  port: 8080
+  nodePort: 30080
+  env:
+    - name: JWT_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: eouil-secret
+          key: jwt-secret
+
+authService:
+  image:
+    repository: 640168458081.dkr.ecr.ap-northeast-2.amazonaws.com/eouil-auth-service
+    tag: "1.0.0"
+  port: 8081
+  env:
+    # Auth 전용 MySQL
+    - name: SPRING_DATASOURCE_URL
+      value: jdbc:mysql://mysql-auth.default.svc.cluster.local:3306/authdb
+    - name: SPRING_DATASOURCE_USERNAME
+      valueFrom:
+        secretKeyRef:
+          name: mysql-auth
+          key: auth-user
+    - name: SPRING_DATASOURCE_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: mysql-auth
+          key: auth-password
+
+    # Redis (공용)
+    - name: SPRING_REDIS_HOST
+      value: redis-cluster-master.default.svc.cluster.local
+    - name: SPRING_REDIS_PORT
+      value: "6379"
+    - name: SPRING_REDIS_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: redis-cluster
+          key: redis-password
+
+    # Kafka (공용)
+    - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+      value: kafka.default.svc.cluster.local:9092
+
+acService:
+  image:
+    repository: 640168458081.dkr.ecr.ap-northeast-2.amazonaws.com/eouil-ac-service
+    tag: "1.0.0"
+  port: 8082
+  env:
+    # AC 전용 MySQL
+    - name: SPRING_DATASOURCE_URL
+      value: jdbc:mysql://mysql-ac.default.svc.cluster.local:3306/acdb
+    - name: SPRING_DATASOURCE_USERNAME
+      valueFrom:
+        secretKeyRef:
+          name: mysql-ac
+          key: auth-user
+    - name: SPRING_DATASOURCE_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: mysql-ac
+          key: auth-password
+
+    # Redis (공용)
+    - name: SPRING_REDIS_HOST
+      value: redis-cluster-master.default.svc.cluster.local
+    - name: SPRING_REDIS_PORT
+      value: "6379"
+    - name: SPRING_REDIS_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: redis-cluster
+          key: redis-password
+
+    # Kafka (공용)
+    - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+      value: kafka.default.svc.cluster.local:9092

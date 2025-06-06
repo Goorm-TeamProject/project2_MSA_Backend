@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ac-service
+  namespace: default
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ac-service
+  template:
+    metadata:
+      labels:
+        app: ac-service
+    spec:
+      containers:
+        - name: ac
+          image: "{{ .Values.acService.image.repository }}:{{ .Values.acService.image.tag }}"
+          ports:
+            - containerPort: {{ .Values.acService.port }}
+          env:
+{{ toYaml .Values.acService.env | indent 12 }}

@@ -1,19 +1,20 @@
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: myapp-vs
-  namespace: default
+  name: eouil-vs
+  namespace: istio-system
 spec:
   hosts:
-    - "myapp.example.com"
+    - "api.eouil.com"
   gateways:
-    - myapp-gateway
+    - eouil-gateway
   http:
-    - match:
+    - name: "all-to-spring-gateway"
+      match:
         - uri:
-            prefix: "/"
+            prefix: "/"      # 모든 경로를 Spring Cloud Gateway로 전달
       route:
         - destination:
-            host: myapp-service.default.svc.cluster.local   # 서비스 FQDN
+            host: gateway-service.default.svc.cluster.local
             port:
-              number: 80
+              number: 8080

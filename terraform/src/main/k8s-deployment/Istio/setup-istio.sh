@@ -18,7 +18,7 @@ kubectl -n istio-system wait --for=condition=Available --timeout=120s deployment
 echo "[4/5] Enabling sidecar injection on default namespace..."
 kubectl label namespace default istio-injection=enabled --overwrite
 
-# 5. Gateway + VirtualService 예시 배포 (있다면)
+# 5. Gateway + VirtualService 배포 (있다면)
 if [ -f "istio/gateway.yaml" ] && [ -f "istio/virtualservice.yaml" ]; then
   echo "[5/5] Applying Istio Gateway & VirtualService"
   kubectl apply -f istio/gateway.yaml
