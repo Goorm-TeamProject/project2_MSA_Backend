@@ -1,0 +1,17 @@
+# kafka-values.yaml
+replicaCount: 1
+image:
+  tag: 3.5.1
+auth:
+  clientProtocol: plaintext
+  interBrokerProtocol: plaintext
+persistence:
+  enabled: true
+  size: 0.5Gi
+  storageClass: gp3
+zookeeper:
+  replicaCount: 1
+  persistence:
+    enabled: true
+    size: 1Gi
+    storageClass: gp3

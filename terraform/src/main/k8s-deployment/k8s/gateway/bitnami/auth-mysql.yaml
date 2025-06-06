@@ -1,0 +1,14 @@
+image:
+  tag: 8.0.36
+primary:
+  persistence:
+    enabled: true
+    size: 1Gi        # PVC 크기
+    storageClass: gp3 # (필요시 특정 StorageClass 지정)
+  auth:
+    rootPassword: Goorm!
+    database: authdb
+    username: authuser
+    password: authpass
+  service:
+    port: 3306

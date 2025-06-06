@@ -1,0 +1,23 @@
+# deployment-gateway.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway-service
+  namespace: default
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: gateway-service
+  template:
+    metadata:
+      labels:
+        app: gateway-service
+    spec:
+      containers:
+        - name: gateway
+          image: "{{ .Values.gatewayService.image.repository }}:{{ .Values.gatewayService.image.tag }}"
+          ports:
+            - containerPort: {{ .Values.gatewayService.port }}
+          env:
+{{ toYaml .Values.gatewayService.env | indent 12 }}
