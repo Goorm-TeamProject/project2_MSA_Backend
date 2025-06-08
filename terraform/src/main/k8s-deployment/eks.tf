@@ -23,7 +23,7 @@ module "eks" {
       desired_capacity = 3
       max_capacity     = 5
       min_capacity     = 2
-      instance_types   = ["t3.medium"]
+      instance_types   = ["t3.large"]
       subnet_ids       = data.aws_subnets.default.ids
 
       additional_security_group_ids = var.extra_node_security_groups
@@ -32,7 +32,7 @@ module "eks" {
   enable_irsa = true
 
   cluster_endpoint_public_access        = true
-  cluster_endpoint_public_access_cidrs  = ["0.0.0.0/0"]
+  cluster_endpoint_public_access_cidrs  = ["218.235.249.173/32"]
 }
 #218.235.249.173/32 - 집 아이피
 

@@ -97,3 +97,10 @@ resource "aws_iam_policy_attachment" "aws_lb_controller_attach" {
   policy_arn = aws_iam_policy.aws_lb_controller_policy[0].arn
   roles      = [ aws_iam_role.aws_lb_controller[0].name ]
 }
+
+#EBS Policy
+resource "aws_iam_role_policy_attachment" "eks_worker_node_ebs_csi" {
+  role       = aws_iam_role.eks_worker_node_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+}
+

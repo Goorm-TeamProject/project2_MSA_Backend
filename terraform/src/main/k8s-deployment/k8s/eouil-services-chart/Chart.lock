@@ -1,0 +1,15 @@
+dependencies:
+- name: mysql
+  repository: https://charts.bitnami.com/bitnami
+  version: 13.0.1
+- name: mysql
+  repository: https://charts.bitnami.com/bitnami
+  version: 13.0.1
+- name: redis
+  repository: https://charts.bitnami.com/bitnami
+  version: 21.2.1
+- name: kafka
+  repository: https://charts.bitnami.com/bitnami
+  version: 32.2.13
+digest: sha256:7971f95179aa82e1c42afb4c627aeccf8658f9e032e7b8592947c0e7a68ac170
+generated: "2025-06-08T22:49:10.698813+09:00"

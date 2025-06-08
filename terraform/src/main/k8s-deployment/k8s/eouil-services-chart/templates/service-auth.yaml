@@ -1,12 +1,18 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: auth-service
+  name: auth-service-svc
   namespace: default
+  labels:
+    app: auth-service
 spec:
   type: ClusterIP
   ports:
-    - port: {{ .Values.authService.port }}
+    - name: http
+      port: 80
       targetPort: {{ .Values.authService.port }}
+    - name: https
+      port: 443
+      targetPort: 8443  # 사용하지 않으면 이 줄 제거 가능
   selector:
     app: auth-service

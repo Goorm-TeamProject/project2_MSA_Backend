@@ -7,11 +7,18 @@ auth:
   interBrokerProtocol: plaintext
 persistence:
   enabled: true
-  size: 0.5Gi
-  storageClass: gp3
+  size: 128Mi
+  storageClass: gp2
+resources:
+  requests:
+    cpu: "128m"
+    memory: "256Mi"
+  limits:
+    cpu: "256m"
+    memory: "512Mi"
 zookeeper:
   replicaCount: 1
   persistence:
     enabled: true
     size: 1Gi
-    storageClass: gp3
+    storageClass: gp2
