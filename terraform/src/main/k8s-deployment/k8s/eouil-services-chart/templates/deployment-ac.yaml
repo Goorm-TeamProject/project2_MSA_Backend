@@ -1,8 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ac-service
+  name: ac-service-pod
   namespace: default
+  labels:
+    app: ac-service
 spec:
   replicas: 2
   selector:

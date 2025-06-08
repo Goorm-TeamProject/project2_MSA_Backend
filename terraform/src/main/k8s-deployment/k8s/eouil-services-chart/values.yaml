@@ -1,9 +1,16 @@
+replicaCount: 2
+
+# 공통 service 템플릿 설정용
+serviceDefaults:
+  type: NodePort
+
+# gatewayService config
 gatewayService:
   image:
     repository: 640168458081.dkr.ecr.ap-northeast-2.amazonaws.com/eouil-gateway-service
     tag: "1.0.0"
   port: 8080
-  nodePort: 30080
+
   env:
     - name: JWT_SECRET
       valueFrom:
@@ -11,72 +18,174 @@ gatewayService:
           name: eouil-secret
           key: jwt-secret
 
+# authService config
 authService:
   image:
     repository: 640168458081.dkr.ecr.ap-northeast-2.amazonaws.com/eouil-auth-service
     tag: "1.0.0"
   port: 8081
   env:
-    # Auth 전용 MySQL
     - name: SPRING_DATASOURCE_URL
-      value: jdbc:mysql://mysql-auth.default.svc.cluster.local:3306/authdb
+      valueFrom:
+        secretKeyRef:
+          name: spring-mysql-auth-secret
+          key: SPRING_DATASOURCE_URL
     - name: SPRING_DATASOURCE_USERNAME
       valueFrom:
         secretKeyRef:
-          name: mysql-auth
-          key: auth-user
+          name: spring-mysql-auth-secret
+          key: SPRING_DATASOURCE_USERNAME
     - name: SPRING_DATASOURCE_PASSWORD
       valueFrom:
         secretKeyRef:
-          name: mysql-auth
-          key: auth-password
-
-    # Redis (공용)
-    - name: SPRING_REDIS_HOST
-      value: redis-cluster-master.default.svc.cluster.local
-    - name: SPRING_REDIS_PORT
-      value: "6379"
-    - name: SPRING_REDIS_PASSWORD
+          name: spring-mysql-auth-secret
+          key: SPRING_DATASOURCE_PASSWORD
+    - name: REDIS_HOST
       valueFrom:
         secretKeyRef:
-          name: redis-cluster
-          key: redis-password
+          name: redis-secret
+          key: REDIS_HOST
+    - name: REDIS_PORT
+      valueFrom:
+        secretKeyRef:
+          name: redis-secret
+          key: REDIS_PORT
+    - name: KAFKA_BOOTSTRAP_SERVERS
+      valueFrom:
+        secretKeyRef:
+          name: spring-kafka-secret
+          key: KAFKA_BOOTSTRAP_SERVERS
+    - name: JWT_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: eouil-jwt-secret
+          key: JWT_SECRET
 
-    # Kafka (공용)
-    - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
-      value: kafka.default.svc.cluster.local:9092
-
+# acService config
 acService:
   image:
     repository: 640168458081.dkr.ecr.ap-northeast-2.amazonaws.com/eouil-ac-service
     tag: "1.0.0"
   port: 8082
   env:
-    # AC 전용 MySQL
     - name: SPRING_DATASOURCE_URL
-      value: jdbc:mysql://mysql-ac.default.svc.cluster.local:3306/acdb
+      valueFrom:
+        secretKeyRef:
+          name: spring-mysql-ac-secret
+          key: SPRING_DATASOURCE_URL
     - name: SPRING_DATASOURCE_USERNAME
       valueFrom:
         secretKeyRef:
-          name: mysql-ac
-          key: auth-user
+          name: spring-mysql-ac-secret
+          key: SPRING_DATASOURCE_USERNAME
     - name: SPRING_DATASOURCE_PASSWORD
       valueFrom:
         secretKeyRef:
-          name: mysql-ac
-          key: auth-password
-
-    # Redis (공용)
-    - name: SPRING_REDIS_HOST
-      value: redis-cluster-master.default.svc.cluster.local
-    - name: SPRING_REDIS_PORT
-      value: "6379"
-    - name: SPRING_REDIS_PASSWORD
+          name: spring-mysql-ac-secret
+          key: SPRING_DATASOURCE_PASSWORD
+    - name: REDIS_HOST
       valueFrom:
         secretKeyRef:
-          name: redis-cluster
-          key: redis-password
+          name: redis-secret
+          key: REDIS_HOST
+    - name: REDIS_PORT
+      valueFrom:
+        secretKeyRef:
+          name: redis-secret
+          key: REDIS_PORT
+    - name: KAFKA_BOOTSTRAP_SERVERS
+      valueFrom:
+        secretKeyRef:
+          name: spring-kafka-secret
+          key: KAFKA_BOOTSTRAP_SERVERS
+    - name: JWT_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: eouil-jwt-secret
+          key: JWT_SECRET
 
-    # Kafka (공용)
-    - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
-      value: kafka.default.svc.cluster.local:9092
+mysql-ac:
+  primary:
+    resources:
+      requests:
+        cpu: "128m"
+        memory: "512Mi"
+      limits:
+        cpu: "256m"
+        memory: "1Gi"
+    persistence:
+      enabled: true
+      size: 256Mi
+      storageClass: gp2
+    auth:
+      existingSecret: mysql-ac-secret
+      rootPassword: ""
+      database: acdb
+      username: acuser
+      password: ""
+mysql-auth:
+  primary:
+    resources:
+      requests:
+        cpu: "128m"
+        memory: "512Mi"
+      limits:
+        cpu: "256m"
+        memory: "1Gi"
+    persistence:
+      enabled: true
+      size: 256Mi
+      storageClass: gp2
+    auth:
+      existingSecret: mysql-auth-secret
+      rootPassword: ""
+      database: authdb
+      username: authuser
+      password: ""
+redis:
+  architecture: standalone
+  master:
+    persistence:
+      enabled: true
+      size: 256Mi
+      storageClass: gp2
+    auth:
+      enabled: false
+  resources:
+    requests:
+      cpu: "128m"
+      memory: "256Mi"
+    limits:
+      cpu: "256m"
+      memory: "512Mi"
+kafka:
+  replicaCount: 1
+  image:
+    tag: 3.5.1
+  auth:
+    clientProtocol: plaintext
+    interBrokerProtocol: plaintext
+  persistence:
+    enabled: true
+    size: 256Mi
+    storageClass: gp2
+  resources:
+    requests:
+      cpu: "128m"
+      memory: "256Mi"
+    limits:
+      cpu: "256m"
+      memory: "512Mi"
+  zookeeper:
+    replicaCount: 1
+    persistence:
+      enabled: true
+      size: 1Gi
+      storageClass: gp2
+    resources:
+      requests:
+        cpu: "128m"
+        memory: "256Mi"
+      limits:
+        cpu: "256m"
+        memory: "512Mi"
