@@ -32,7 +32,7 @@ module "eks" {
   enable_irsa = true
 
   cluster_endpoint_public_access        = true
-  cluster_endpoint_public_access_cidrs  = ["218.235.249.173/32"]
+  cluster_endpoint_public_access_cidrs  = ["0.0.0.0/0"]
 }
 #218.235.249.173/32 - 집 아이피
 

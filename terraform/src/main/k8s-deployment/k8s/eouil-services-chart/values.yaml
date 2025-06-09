@@ -11,13 +11,6 @@ gatewayService:
     tag: "1.0.0"
   port: 8080
 
-  env:
-    - name: JWT_SECRET
-      valueFrom:
-        secretKeyRef:
-          name: eouil-secret
-          key: jwt-secret
-
 # authService config
 authService:
   image:
@@ -104,6 +97,7 @@ acService:
           name: eouil-jwt-secret
           key: JWT_SECRET
 
+#AC Database
 mysql-ac:
   primary:
     resources:
@@ -118,13 +112,14 @@ mysql-ac:
       size: 256Mi
       storageClass: gp2
     auth:
-      existingSecret: mysql-ac-secret
-      rootPassword: ""
+      rootPassword: Goorm!
       database: acdb
       username: acuser
-      password: ""
+      password: acpass
+
+#Auth Database
 mysql-auth:
-  primary:
+   primary:
     resources:
       requests:
         cpu: "128m"
@@ -134,14 +129,18 @@ mysql-auth:
         memory: "1Gi"
     persistence:
       enabled: true
-      size: 256Mi
+      size: 128Mi
       storageClass: gp2
     auth:
-      existingSecret: mysql-auth-secret
-      rootPassword: ""
-      database: authdb
-      username: authuser
-      password: ""
+      rootPassword: Goorm!
+      username:   authuser
+      password:   authpass
+      database:   authdb
+
+    service:
+      port: 3306
+
+#Redis
 redis:
   architecture: standalone
   master:
@@ -158,6 +157,8 @@ redis:
     limits:
       cpu: "256m"
       memory: "512Mi"
+
+#Kafka
 kafka:
   replicaCount: 1
   image:
