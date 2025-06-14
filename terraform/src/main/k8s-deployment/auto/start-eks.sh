@@ -1,7 +1,7 @@
 #!/bin/bash
 
 CLUSTER_NAME="Eouil-eks-cluster"
-NODEGROUP_NAME="app-20250607142833687100000001"
+NODEGROUP_NAME="app-20250611142419999400000001"
 REGION="ap-northeast-2"
 
 echo "Starting EKS NodeGroup..."

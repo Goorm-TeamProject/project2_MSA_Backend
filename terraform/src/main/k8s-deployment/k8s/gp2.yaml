@@ -1,0 +1,11 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: gp2-waitforfirstconsumer # 기존 "gp2"와 다른 새로운 이름을 사용합니다.
+provisioner: kubernetes.io/aws-ebs
+parameters:
+  type: gp2
+  fsType: ext4 # 파일 시스템 유형을 명시적으로 정의하는 것이 좋습니다.
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true

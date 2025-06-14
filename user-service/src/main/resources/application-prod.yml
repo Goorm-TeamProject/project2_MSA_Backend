@@ -12,12 +12,29 @@ spring:
   jpa:
     hibernate:
       ddl-auto: none
+    properties:
+      hibernate:
+        id:
+          new_generator_mappings: false
     show-sql: false
 
   data:
     redis:
-      host: ${REDIS_HOST} # 운영 환경의 Redis 호스트 (환경 변수 또는 Secrets Manager)
-      port: ${REDIS_PORT} # 운영 환경의 Redis 포트 (환경 변수 또는 Secrets Manager)
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
 
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS} # 운영 환경의 Kafka 브로커 주소 (환경 변수 또는 Secrets Manager)
+    bootstrap-servers: "eouil-services-kafka-controller-0.eouil-services-kafka-controller-headless.default.svc.cluster.local:9092"
+    producer:
+      retries: 3
+      acks: all
+      batch-size: 16384
+      buffer-memory: 33554432
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
+        max.request.size: 2097152
+        request.timeout.ms: 30000
+        retry.backoff.ms: 1000
+        compression.type: snappy

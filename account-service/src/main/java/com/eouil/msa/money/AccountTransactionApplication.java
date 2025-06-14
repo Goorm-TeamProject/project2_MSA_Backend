@@ -16,8 +16,12 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @EnableFeignClients(basePackages = "com.eouil.msa.money.account")
 public class AccountTransactionApplication {
     public static void main(String[] args) {
-        Dotenv dotenv = Dotenv.load();
-        System.setProperty("JWT_SECRET", dotenv.get("JWT_SECRET"));
+        try {
+            Dotenv dotenv = Dotenv.load();
+            System.setProperty("JWT_SECRET", dotenv.get("JWT_SECRET"));
+        } catch (Exception e) {
+            System.out.println(".env 파일이 없어 dotenv 로드 생략");
+        }
         SpringApplication.run(AccountTransactionApplication.class, args);
     }
 }

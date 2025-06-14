@@ -16,10 +16,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.SendResult;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -72,8 +74,18 @@ public class AuthService {
 
         // Kafka 이벤트 발행
         UserCreatedEvent event = new UserCreatedEvent(userId, user.getEmail(), user.getName());
-        kafkaTemplate.send("user.created", event);
-        log.info("[JOIN] Kafka Event 전송 완료 - {}", event);
+
+        try {
+            SendResult<String, UserCreatedEvent> result = kafkaTemplate.send("user.created", userId, event).get(10, TimeUnit.SECONDS);
+            log.info("[JOIN] Kafka Event 전송 성공 - topic: {}, partition: {}, offset: {}, event: {}",
+                    result.getRecordMetadata().topic(),
+                    result.getRecordMetadata().partition(),
+                    result.getRecordMetadata().offset(),
+                    event);
+        } catch (Exception e) {
+            log.error("[JOIN] Kafka Event 전송 실패 - userId: {}, error: {}",
+                    userId, e.getMessage(), e);
+        }
 
         return new JoinResponse(user.getName(), user.getEmail(), user.getUserId());
     }

@@ -6,13 +6,14 @@ metadata:
   labels:
     app: gateway-service
 spec:
-  type: ClusterIP
+  type: NodePort
   ports:
     - name: http
       port: 80
-      targetPort: {{ .Values.gatewayService.port }}
+      targetPort: 8080
+      nodePort: 30080
     - name: https
       port: 443
-      targetPort: 8443  # 사용 안 하면 제거해도 됨
+      targetPort: 8080  # 사용 안 하면 제거해도 됨
   selector:
     app: gateway-service

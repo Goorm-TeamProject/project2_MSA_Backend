@@ -13,3 +13,8 @@ output "cluster_name" {
 output "node_group_role_arn" {
   value = aws_iam_role.eks_worker_node_role.arn
 }
+
+output "eks_node_ids" {
+  description = "List of EKS worker node IDs found by data source"
+  value       = data.aws_instances.eks_nodes.ids
+}

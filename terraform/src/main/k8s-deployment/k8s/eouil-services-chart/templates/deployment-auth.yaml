@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: auth-service-pod
+  name: auth-service-pod-deploy
   namespace: default
   labels:
     app: auth-service
@@ -21,4 +21,4 @@ spec:
           ports:
             - containerPort: {{ .Values.authService.port }}
           env:
-{{ toYaml .Values.authService.env | indent 12 }}
+{{ toYaml .Values.authService.env | nindent 12 }}

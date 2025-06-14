@@ -55,7 +55,7 @@ public class AuthController {
         // 1) Access Token 쿠키
         ResponseCookie atCookie = ResponseCookie.from("accessToken", loginResponse.getAccessToken())
                 .httpOnly(true)
-                .secure(false)
+                .secure(true)
                 .sameSite("None")
                 .path("/")
                 .maxAge(Duration.ofMinutes(5))
@@ -64,7 +64,7 @@ public class AuthController {
         // 2) Refresh Token 쿠키
         ResponseCookie rtCookie = ResponseCookie.from("refreshToken", loginResponse.getRefreshToken())
                 .httpOnly(true)
-                .secure(false)
+                .secure(true)
                 .sameSite("None")
                 .path("/api/users/refresh")
                 .maxAge(Duration.ofDays(7))

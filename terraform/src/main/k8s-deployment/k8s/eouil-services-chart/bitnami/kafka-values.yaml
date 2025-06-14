@@ -1,24 +1,78 @@
-# kafka-values.yaml
 replicaCount: 1
+
+kraft:
+  enabled: true
+  clusterId: "KraftCluster"
+  replicationFactor: 1
+
 image:
+  registry: docker.io
+  repository: bitnami/kafka
   tag: 3.5.1
+  pullPolicy: IfNotPresent
+
 auth:
   clientProtocol: plaintext
   interBrokerProtocol: plaintext
+  sasl:
+    enabled: false
+
 persistence:
-  enabled: true
-  size: 128Mi
-  storageClass: gp2
+  enabled: false
+  # storageClass: "gp2"
+  # size: 8Gi
+
 resources:
   requests:
-    cpu: "128m"
-    memory: "256Mi"
+    cpu: 100m
+    memory: 1024Mi
   limits:
-    cpu: "256m"
-    memory: "512Mi"
+    cpu: 500m
+    memory: 1.5Gi
+
+# Kafka 브로커 설정
+configurationOverrides:
+  auto.create.topics.enable: true
+  delete.topic.enable: true
+  num.partitions: 3
+  default.replication.factor: 1
+  min.insync.replicas: 1
+  offsets.topic.replication.factor: 1
+  transaction.state.log.replication.factor: 1
+  transaction.state.log.min.isr: 1
+  log.retention.hours: 168
+  log.retention.bytes: 1073741824
+  connections.max.idle.ms: 600000
+  request.timeout.ms: 30000
+  retry.backoff.ms: 500
+
+# 네트워크 설정
+listeners:
+  client:
+    protocol: PLAINTEXT
+    name: PLAINTEXT
+    advertisedListeners:
+      - PLAINTEXT://eouil-services-kafka-controller-0.eouil-services-kafka-controller-headless.default.svc.cluster.local:9092
+
+# 서비스 설정
+service:
+  type: ClusterIP
+  ports:
+    client: 9092
+  annotations: {}
+
+# 메트릭스 설정
+metrics:
+  kafka:
+    enabled: false
+  jmx:
+    enabled: false
+  serviceMonitor:
+    enabled: false
+
+# Zookeeper 비활성화 (KRaft 모드 사용)
 zookeeper:
-  replicaCount: 1
-  persistence:
-    enabled: true
-    size: 1Gi
-    storageClass: gp2
+  enabled: false
+
+# 로깅 설정
+logLevel: info
