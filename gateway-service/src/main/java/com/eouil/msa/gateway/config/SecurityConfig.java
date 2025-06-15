@@ -3,6 +3,7 @@ package com.eouil.msa.gateway.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
@@ -10,6 +11,7 @@ import org.springframework.security.web.server.context.NoOpServerSecurityContext
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsWebFilter;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -26,6 +28,13 @@ public class SecurityConfig {
                 .httpBasic(basic -> basic.disable())
                 // Form 로그인 비활성화
                 .formLogin(form -> form.disable())
+
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((exchange, exAuth) -> {
+                            exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                            return Mono.empty();
+                        })
+                )
 
                 // 엔드포인트별 접근 제어
                 .authorizeExchange(exchanges -> exchanges
@@ -44,11 +53,12 @@ public class SecurityConfig {
                                 "/api/users/join",
                                 "/api/users/login",
                                 "/api/users/logout",
-                                "/api/users/refresh"
+                                "/api/users/refresh",
+                                "/api/refresh"
                         ).permitAll()
 
                         // 그 외 /api/** 요청은 인증 필요
-                        .pathMatchers("/api/**").authenticated()
+                        .pathMatchers("/api/**").permitAll()
 
                         // 그 외 모든 요청은 허용
                         .anyExchange().permitAll()

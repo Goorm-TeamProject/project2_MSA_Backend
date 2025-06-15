@@ -11,8 +11,5 @@ spec:
     - name: http
       port: 80
       targetPort: 8082
-    - name: https
-      port: 443
-      targetPort: 8443  # 사용하지 않는다면 이 줄 제거해도 OK
   selector:
     app: ac-service

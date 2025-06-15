@@ -66,7 +66,7 @@ public class AuthController {
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("None")
-                .path("/api/users/refresh")
+                .path("/")
                 .maxAge(Duration.ofDays(7))
                 .build();
 

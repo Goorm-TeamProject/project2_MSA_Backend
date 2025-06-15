@@ -1,3 +1,5 @@
+## values.yaml
+
 replicaCount: 1
 
 kraft:
@@ -19,8 +21,6 @@ auth:
 
 persistence:
   enabled: false
-  # storageClass: "gp2"
-  # size: 8Gi
 
 resources:
   requests:
@@ -29,6 +29,42 @@ resources:
   limits:
     cpu: 500m
     memory: 1.5Gi
+
+# ----------------------------
+# Init-Container
+# ----------------------------
+extraInitContainers:
+  - name: create-offsets-topic
+    image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+    imagePullPolicy: {{ .Values.image.pullPolicy }}
+    command:
+      - sh
+      - -c
+      - |
+        echo "🔄 Waiting for Kafka broker..."
+        # 브로커가 준비될 때까지 대기
+        until kafka-topics.sh --bootstrap-server localhost:9092 --list > /dev/null 2>&1; do
+          sleep 5
+        done
+        echo "Kafka is up, checking __consumer_offsets..."
+        # 토픽이 없으면 생성
+        if ! kafka-topics.sh --bootstrap-server localhost:9092 \
+            --describe --topic __consumer_offsets > /dev/null 2>&1; then
+          echo "➕ Creating __consumer_offsets topic"
+          kafka-topics.sh \
+            --bootstrap-server localhost:9092 \
+            --create \
+            --topic __consumer_offsets \
+            --partitions 5 \
+            --replication-factor 1 \
+            --config cleanup.policy=compact
+        else
+          echo "__consumer_offsets already exists"
+        fi
+    # Kafka 데이터 볼륨 마운트 (Bitnami chart 기본)
+    volumeMounts:
+      - name: data
+        mountPath: /bitnami/kafka/data
 
 # Kafka 브로커 설정
 configurationOverrides:
@@ -54,14 +90,11 @@ listeners:
     advertisedListeners:
       - PLAINTEXT://eouil-services-kafka-controller-0.eouil-services-kafka-controller-headless.default.svc.cluster.local:9092
 
-# 서비스 설정
 service:
   type: ClusterIP
   ports:
     client: 9092
-  annotations: {}
 
-# 메트릭스 설정
 metrics:
   kafka:
     enabled: false
@@ -70,9 +103,7 @@ metrics:
   serviceMonitor:
     enabled: false
 
-# Zookeeper 비활성화 (KRaft 모드 사용)
 zookeeper:
   enabled: false
 
-# 로깅 설정
 logLevel: info

@@ -58,14 +58,14 @@ resource "aws_lb_target_group" "nodes" {
   target_type = "instance"
 
   health_check {
-    path                = "/actuator/health"
+    path                = "/actuator/health/liveness"
     protocol            = "HTTP"
     port                = "traffic-port"
     interval            = 30
     timeout             = 5
     healthy_threshold   = 2
     unhealthy_threshold = 2
-    matcher             = "200-399"
+    matcher             = "200"
   }
 }
 
@@ -77,7 +77,7 @@ data "aws_instances" "eks_nodes" {
   }
   filter {
     name   = "tag:eks:nodegroup-name"
-    values = ["app-20250607142833687100000001"]
+    values = ["app-app-20250611142419999400000001"]
   }
 }
 

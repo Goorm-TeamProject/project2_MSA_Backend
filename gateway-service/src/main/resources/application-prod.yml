@@ -1,95 +1,102 @@
-#Gateway-service.yaml
+# src/main/resources/application-prod.yml
 
-gatewayService:
-  applicationConfig:
-    spring:
-      config:
-        activate:
-          on-profile: prod
-      cloud:
-        gateway:
-          default-filters:
-            - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
-          globalcors:
-            corsConfigurations:
-              '[/**]':
-                allowedOrigins:
-                  - "http://localhost:5173"
-                  - "https://app.eouil.com"
-                  - "https://eouil.com"
-                  - "http://eouil.com"
-                  - "https://api.eouil.com"
-                allowedMethods:
-                  - GET
-                  - POST
-                  - PUT
-                  - DELETE
-                  - OPTIONS
-                allowedHeaders:
-                  - "Origin"
-                  - "Content-Type"
-                  - "Accept"
-                  - "Authorization"
-                  - "X-Requested-With"
-                  - "Access-Control-Request-Method"
-                  - "Access-Control-Request-Headers"
-                allowCredentials: true
-                maxAge: 3600
-          routes:
-            - id: user-public
-              uri: http://auth-service.default.svc.cluster.local:80
-              predicates:
-                - Path=/api/users/join,/api/users/login,/api/users/logout
-                - Host=api.eouil.com
-                - Method=POST
+server:
+  port: 8080
 
-            - id: user-service
-              uri: http://auth-service.default.svc.cluster.local:80
-              predicates:
-                - Path=/api/users/**
-                - Host=api.eouil.com
-              filters:
-                - CookieToHeader
-                - AuthorizationHeader
-                - RewritePath=/api/users/(?<segment>.*), /${segment}
+spring:
+  config:
+    activate:
+      on-profile: prod
 
-            - id: accounts
-              uri: http://accounts.default.svc.cluster.local:80
-              predicates:
-                - Path=/api/accounts/**
-                - Host=api.eouil.com
-              filters:
-                - CookieToHeader
-                - AuthorizationHeader
+  cloud:
+    gateway:
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:5173"
+              - "https://app.eouil.com"
+              - "https://eouil.com"
+              - "https://api.eouil.com"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders:
+              - "*"
+            allowCredentials: true
+            maxAge: 3600
+      routes:
+        - id: user-public
+          uri: http://auth-service.default.svc.cluster.local:80
+          predicates:
+            - Host=api.eouil.com
+            - Method=POST
+            - Path=/api/users/join,/api/users/login,/api/users/logout
 
-            - id: transactions
-              uri: http://transactions.default.svc.cluster.local:80
-              predicates:
-                - Path=/api/transactions/**
-                - Host=api.eouil.com
-              filters:
-                - CookieToHeader
-                - AuthorizationHeader
+        - id: user-refresh
+          uri: http://auth-service.default.svc.cluster.local:80
+          predicates:
+            - Host=api.eouil.com
+            - Method=POST
+            - Path=/api/users/refresh
+          filters:
+            - name: CookieToHeader
 
-  management:
-    endpoints:
-      web:
-        exposure:
-          include: health
-        base-path: /actuator
-        cors:
-          allowed-origins:
-            - "http://localhost:5173"
-            - "https://app.eouil.com"
-            - "https://eouil.com"
-            - "https://api.eouil.com"
-          allowed-methods:
-            - GET
-            - OPTIONS
-          allowed-headers:
-            - "*"
-          allow-credentials: true
-          max-age: 3600
-    endpoint:
-      health:
-        show-details: always
+        - id: refresh
+          uri: http://auth-service.default.svc.cluster.local:80
+          predicates:
+            - Host=api.eouil.com
+            - Method=POST
+            - Path=/api/refresh
+          filters:
+            - name: CookieToHeader
+            - RewritePath=/api/refresh, /api/users/refresh
+
+        - id: user-service
+          uri: http://auth-service.default.svc.cluster.local:80
+          predicates:
+            - Host=api.eouil.com
+            - Path=/api/users/**
+          filters:
+            - name: CookieToHeader
+            #- name: AuthorizationHeader
+            - RewritePath=/api/users/(?<segment>.*), /${segment}
+
+        - id: accounts-service
+          uri: http://ac-service.default.svc.cluster.local:80
+          predicates:
+            - Host=api.eouil.com
+            - Path=/api/accounts/**
+          filters:
+            - name: CookieToHeader
+            #- name: AuthorizationHeader
+
+        - id: transactions-service
+          uri: http://ac-service.default.svc.cluster.local:80
+          predicates:
+            - Host=api.eouil.com
+            - Path=/api/transactions/**
+          filters:
+            - name: CookieToHeader
+            #- name: AuthorizationHeader
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    org.springframework.cloud.gateway.filter: DEBUG
+    org.springframework.cloud.gateway.handler: DEBUG
+    org.springframework.security: DEBUG

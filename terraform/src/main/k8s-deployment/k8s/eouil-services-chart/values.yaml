@@ -12,7 +12,7 @@ serviceDefaults:
 gatewayService:
   image:
     repository: 640168458081.dkr.ecr.ap-northeast-2.amazonaws.com/eouil-gateway-service
-    tag: "1.0.21"
+    tag: "1.0.36"
   port: 80
   targetPort: 8080
   nodePort: 30080
@@ -26,86 +26,11 @@ gatewayService:
           name: eouil-jwt-secret
           key: JWT_SECRET
 
-  applicationConfig:
-    spring:
-      config:
-        activate:
-          on-profile: prod
-
-    # ─── Actuator 헬스체크 노출 설정 ───────────────────────────────
-    management:
-      endpoints:
-        web:
-          exposure:
-            include: health,info
-          base-path: /actuator
-      endpoint:
-        health:
-          show-details: always
-    # ────────────────────────────────────────────────────────────
-
-    cloud:
-      gateway:
-        default-filters:
-          - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
-        globalcors:
-          corsConfigurations:
-            '[/**]':
-              allowedOrigins:
-                - "http://localhost:5173"
-                - "https://app.eouil.com"
-                - "https://api.eouil.com"
-              allowedMethods:
-                - GET
-                - POST
-                - OPTIONS
-              allowedHeaders:
-                - "*"
-              allowCredentials: true
-              maxAge: 3600
-        routes:
-          - id: user-public
-            uri: http://auth-service.default.svc.cluster.local:80
-            predicates:
-              - Path=/api/users/join,/api/users/login,/api/users/logout
-              - Host=api.eouil.com
-              - Method=POST
-          - id: user-service
-            uri: http://auth-service.default.svc.cluster.local:80
-            predicates:
-              - Path=/api/users/{segment}  # 패턴 매칭 사용
-              - Host=api.eouil.com
-            filters:
-              - name: CookieToHeader
-              - name: AuthorizationHeader
-              - name: RewritePath
-                args:
-                  regexp: /api/users/(?<segment>.*)
-                  replacement: /${segment}
-
-          - id: accounts
-            uri: http://accounts.default.svc.cluster.local:80
-            predicates:
-              - Path=/api/accounts/**
-              - Host=api.eouil.com
-            filters:
-              - CookieToHeader
-              - AuthorizationHeader
-
-          - id: transactions
-            uri: http://transactions.default.svc.cluster.local:80
-            predicates:
-              - Path=/api/transactions/**
-              - Host=api.eouil.com
-            filters:
-              - CookieToHeader
-              - AuthorizationHeader
-
 # authService config
 authService:
   image:
     repository: 640168458081.dkr.ecr.ap-northeast-2.amazonaws.com/eouil-auth-service
-    tag: "1.0.27"
+    tag: "1.0.28"
   port: 8081
   env:
     - name: SPRING_PROFILES_ACTIVE
@@ -157,7 +82,7 @@ authService:
 acService:
   image:
     repository: 640168458081.dkr.ecr.ap-northeast-2.amazonaws.com/eouil-ac-service
-    tag: "1.0.15"
+    tag: "1.0.28"
   port: 8082
   env:
     - name: SPRING_PROFILES_ACTIVE

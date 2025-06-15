@@ -2,23 +2,5 @@ spring:
   profiles:
     active: prod
 
-  server:
-    port: 8080
-
-  cloud:
-    gateway:
-      globalcors:
-        corsConfigurations:
-          '[/**]':
-            allowedOrigins:
-              - "http://localhost:5173"
-              - "https://eouil.com"
-              - "https://api.eouil.com"
-            allowedMethods:
-              - "*"
-            allowedHeaders: "*"
-            allowCredentials: true
-            exposedHeaders:
-              - "Set-Cookie"
-              - "Authorization"
-            maxAge: 3600
+server:
+  port: 8080

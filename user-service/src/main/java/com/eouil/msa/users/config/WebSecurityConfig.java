@@ -10,18 +10,22 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.reactive.CorsConfigurationSource;
+import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
+
+import java.util.*;
 
 @RequiredArgsConstructor
 @Configuration
 @Slf4j
 public class WebSecurityConfig {
 
-    private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
     private final Environment env;
     private final CustomUserDetailsService customUserDetailsService;
@@ -30,7 +34,7 @@ public class WebSecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         log.debug("[WebSecurityConfig] SecurityFilterChain 설정 시작");
 
-        http
+        return http
                 .csrf(csrf -> csrf.disable())
                 .formLogin(form -> form.disable())
                 .httpBasic(httpBasic -> httpBasic.disable())
@@ -40,33 +44,22 @@ public class WebSecurityConfig {
                                 "/api/users/join",
                                 "/api/users/login",
                                 "/api/users/logout",
-                                "/api/users/refresh"
-                        ).permitAll()
-                        .requestMatchers(
-                                "/actuator/health/**",
-                                "/actuator/info/**"
+                                "/api/users/refresh",
+                                "/actuator/health"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(
-                        new AuthenticationFilter(authenticationManager, userRepository, env, customUserDetailsService),
-                        UsernamePasswordAuthenticationFilter.class
-                );
-
-        return http.build();
+                .build();
     }
 
     @Bean
     public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
-        AuthenticationManagerBuilder builder =
-                http.getSharedObject(AuthenticationManagerBuilder.class);
-
-        builder
-                .userDetailsService(customUserDetailsService)
+        AuthenticationManagerBuilder builder = http.getSharedObject(AuthenticationManagerBuilder.class);
+        builder.userDetailsService(customUserDetailsService)
                 .passwordEncoder(passwordEncoder());
-
         return builder.build();
     }
+
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
