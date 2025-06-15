@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: gateway-service-pod
+  name: gateway-service-pod-deploy
   namespace: default
   labels:
     app: gateway-service
@@ -19,6 +19,6 @@ spec:
         - name: gateway
           image: "{{ .Values.gatewayService.image.repository }}:{{ .Values.gatewayService.image.tag }}"
           ports:
-            - containerPort: {{ .Values.gatewayService.port }}
+            - containerPort: {{ .Values.gatewayService.targetPort }}
           env:
-{{ toYaml .Values.gatewayService.env | indent 12 }}
+{{ toYaml .Values.gatewayService.env | nindent 12 }}

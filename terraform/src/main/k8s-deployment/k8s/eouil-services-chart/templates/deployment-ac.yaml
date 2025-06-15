@@ -1,12 +1,12 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ac-service-pod
+  name: ac-service-pod-deploy
   namespace: default
   labels:
     app: ac-service
 spec:
-  replicas: 2
+  replicas: {{ .Values.acService.replicaCount }}
   selector:
     matchLabels:
       app: ac-service
@@ -21,4 +21,4 @@ spec:
           ports:
             - containerPort: {{ .Values.acService.port }}
           env:
-{{ toYaml .Values.acService.env | indent 12 }}
+{{ toYaml .Values.acService.env | nindent 12 }}

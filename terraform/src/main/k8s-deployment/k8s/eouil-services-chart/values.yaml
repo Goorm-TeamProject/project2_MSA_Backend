@@ -1,30 +1,42 @@
+#helm_values.yaml
+
+certificateArn: "arn:aws:acm:ap-northeast-2:640168458081:certificate/xxxxxx"
+domainName: "api.eouil.com"
+
 replicaCount: 2
 
 # 공통 service 템플릿 설정용
 serviceDefaults:
   type: NodePort
 
-# gatewayService config
 gatewayService:
   image:
     repository: 640168458081.dkr.ecr.ap-northeast-2.amazonaws.com/eouil-gateway-service
-    tag: "1.0.0"
-  port: 8080
+    tag: "1.0.36"
+  port: 80
+  targetPort: 8080
+  nodePort: 30080
 
   env:
+    - name: SPRING_PROFILES_ACTIVE
+      value: prod
     - name: JWT_SECRET
       valueFrom:
         secretKeyRef:
-          name: eouil-secret
-          key: jwt-secret
+          name: eouil-jwt-secret
+          key: JWT_SECRET
 
 # authService config
 authService:
   image:
     repository: 640168458081.dkr.ecr.ap-northeast-2.amazonaws.com/eouil-auth-service
-    tag: "1.0.0"
+    tag: "1.0.28"
   port: 8081
   env:
+    - name: SPRING_PROFILES_ACTIVE
+      value: prod
+    - name: SERVER_PORT
+      value: "8081"
     - name: SPRING_DATASOURCE_URL
       valueFrom:
         secretKeyRef:
@@ -50,11 +62,16 @@ authService:
         secretKeyRef:
           name: redis-secret
           key: REDIS_PORT
-    - name: KAFKA_BOOTSTRAP_SERVERS
+    - name: REDIS_PASSWORD
       valueFrom:
         secretKeyRef:
-          name: spring-kafka-secret
-          key: KAFKA_BOOTSTRAP_SERVERS
+          name: redis-secret
+          key: REDIS_PASSWORD
+#    - name: KAFKA_BOOTSTRAP_SERVERS
+#      valueFrom:
+#        secretKeyRef:
+#          name: spring-kafka-secret
+#          key: KAFKA_BOOTSTRAP_SERVERS
     - name: JWT_SECRET
       valueFrom:
         secretKeyRef:
@@ -65,9 +82,13 @@ authService:
 acService:
   image:
     repository: 640168458081.dkr.ecr.ap-northeast-2.amazonaws.com/eouil-ac-service
-    tag: "1.0.0"
+    tag: "1.0.28"
   port: 8082
   env:
+    - name: SPRING_PROFILES_ACTIVE
+      value: prod
+    - name: SERVER_PORT
+      value: "8082"
     - name: SPRING_DATASOURCE_URL
       valueFrom:
         secretKeyRef:
@@ -93,17 +114,23 @@ acService:
         secretKeyRef:
           name: redis-secret
           key: REDIS_PORT
-    - name: KAFKA_BOOTSTRAP_SERVERS
+    - name: REDIS_PASSWORD
       valueFrom:
         secretKeyRef:
-          name: spring-kafka-secret
-          key: KAFKA_BOOTSTRAP_SERVERS
+          name: redis-secret
+          key: REDIS_PASSWORD
+#    - name: KAFKA_BOOTSTRAP_SERVERS
+#      valueFrom:
+#        secretKeyRef:
+#          name: spring-kafka-secret
+#          key: KAFKA_BOOTSTRAP_SERVERS
     - name: JWT_SECRET
       valueFrom:
         secretKeyRef:
           name: eouil-jwt-secret
           key: JWT_SECRET
 
+#AC Database
 mysql-ac:
   primary:
     resources:
@@ -116,15 +143,16 @@ mysql-ac:
     persistence:
       enabled: true
       size: 256Mi
-      storageClass: gp2
+      storageClass: gp2-waitforfirstconsumer
     auth:
-      existingSecret: mysql-ac-secret
-      rootPassword: ""
+      rootPassword: Goorm!
       database: acdb
       username: acuser
-      password: ""
+      password: acpass
+
+#Auth Database
 mysql-auth:
-  primary:
+   primary:
     resources:
       requests:
         cpu: "128m"
@@ -134,58 +162,103 @@ mysql-auth:
         memory: "1Gi"
     persistence:
       enabled: true
-      size: 256Mi
-      storageClass: gp2
+      size: 128Mi
+      storageClass: gp2-waitforfirstconsumer
     auth:
-      existingSecret: mysql-auth-secret
-      rootPassword: ""
-      database: authdb
-      username: authuser
-      password: ""
+      rootPassword: Goorm!
+      username:   authuser
+      password:   authpass
+      database:   authdb
+
+    service:
+      port: 3306
+
+#Redis
 redis:
   architecture: standalone
   master:
     persistence:
-      enabled: true
-      size: 256Mi
-      storageClass: gp2
-    auth:
       enabled: false
+    auth:
+      enabled: true
+      password: redis0402
   resources:
     requests:
-      cpu: "128m"
-      memory: "256Mi"
+      cpu: "50m"
+      memory: "128Mi"
     limits:
-      cpu: "256m"
-      memory: "512Mi"
+      cpu: "100m"
+      memory: "256mi"
+
 kafka:
+  kraft:
+    enabled: true
   replicaCount: 1
-  image:
-    tag: 3.5.1
+
+  controller:
+    replicaCount: 1
+    resources:
+      requests:
+        cpu: 100m
+        memory: 1024Mi
+      limits:
+        cpu: 500m
+        memory: 1.5Gi
+    persistence:
+      enabled: false
+
+  broker:
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+      limits:
+        cpu: 1
+        memory: 1.5Gi
+    # 브로커 설정 추가
+    configurationOverrides:
+      auto.create.topics.enable: true
+      delete.topic.enable: true
+      connections.max.idle.ms: 600000
+      request.timeout.ms: 30000
+      retry.backoff.ms: 500
+      max.poll.interval.ms: 300000
+      session.timeout.ms: 45000
+      heartbeat.interval.ms: 10000
+
+  persistence:
+    enabled: false
+
   auth:
     clientProtocol: plaintext
     interBrokerProtocol: plaintext
-  persistence:
+
+  metrics:
+    jmx:
+      enabled: false
+    kafka:
+      enabled: false
+
+  provisioning:
+    enabled: false
+
+  listeners:
+    client:
+      protocol: PLAINTEXT
+      advertisedListeners:
+        - PLAINTEXT://eouil-services-kafka-controller-0.eouil-services-kafka-controller-headless.default.svc.cluster.local:9092
+
+  # 리소스 제한 설정
+  heapOpts: "-Xmx1G -Xms1G"
+
+  # 네트워크 설정
+  networkPolicy:
     enabled: true
-    size: 256Mi
-    storageClass: gp2
-  resources:
-    requests:
-      cpu: "128m"
-      memory: "256Mi"
-    limits:
-      cpu: "256m"
-      memory: "512Mi"
-  zookeeper:
-    replicaCount: 1
-    persistence:
-      enabled: true
-      size: 1Gi
-      storageClass: gp2
-    resources:
-      requests:
-        cpu: "128m"
-        memory: "256Mi"
-      limits:
-        cpu: "256m"
-        memory: "512Mi"
+    allowExternal: true
+
+  # 모니터링 설정
+  serviceMonitor:
+    enabled: false
+
+  # 로깅 설정
+  logLevel: info

@@ -49,7 +49,7 @@ resource "aws_lb" "eouil" {
   subnets            = data.aws_subnets.default.ids
 }
 
-# Target Group for EKS nodes (NodePort 30080)
+# 수정: Health check 경로 오타 및 구조 정리
 resource "aws_lb_target_group" "nodes" {
   name        = "eouil-tg"
   port        = 30080
@@ -58,31 +58,31 @@ resource "aws_lb_target_group" "nodes" {
   target_type = "instance"
 
   health_check {
-    path                = "/"
+    path                = "/actuator/health/liveness"
     protocol            = "HTTP"
     port                = "traffic-port"
     interval            = 30
     timeout             = 5
     healthy_threshold   = 2
     unhealthy_threshold = 2
-    matcher             = "200-399"
+    matcher             = "200"
   }
 }
 
-# Discover EKS worker nodes by tags
+# Discover EC2 instance IDs for the EKS worker nodes
 data "aws_instances" "eks_nodes" {
   filter {
     name   = "tag:eks:cluster-name"
-    values = [module.eks.cluster_name]
+    values = ["Eouil-eks-cluster"]
   }
   filter {
     name   = "tag:eks:nodegroup-name"
-    values = ["app"]
+    values = ["app-app-20250611142419999400000001"]
   }
 }
 
-# Register each EKS node to the Target Group
-resource "aws_lb_target_group_attachment" "node" {
+# Target group attachment
+resource "aws_lb_target_group_attachment" "nodes" {
   for_each = toset(data.aws_instances.eks_nodes.ids)
 
   target_group_arn = aws_lb_target_group.nodes.arn

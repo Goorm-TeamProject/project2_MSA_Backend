@@ -1,0 +1,13 @@
+# debug-pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kafka-debug-pod
+spec:
+  containers:
+    - name: kafka-debug
+      image: bitnami/kafka:latest
+      command:
+        - "/bin/bash"
+        - "-c"
+        - "sleep infinity"

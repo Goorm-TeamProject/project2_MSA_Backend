@@ -21,9 +21,6 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect # 기본 JPA 방언
 
-  kafka:
-    bootstrap-servers: localhost:9092 # 기본 Kafka 브로커 주소
-
 jwt:
   secret: ${JWT_SECRET} # 환경 변수에서 JWT 시크릿 키를 읽어옴
   expiration_time: 600000

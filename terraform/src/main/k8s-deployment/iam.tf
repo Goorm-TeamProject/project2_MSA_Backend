@@ -1,7 +1,6 @@
-// iam.tf
-# EKS 클러스터/노드 그룹용 IAM 역할/정책은 eks 모듈에서 자동 생성
-
-# EKS Cluster IAM Role
+# -------------------------------
+# EKS Cluster Role
+# -------------------------------
 data "aws_iam_policy_document" "eks_cluster_assume_role_policy" {
   statement {
     effect = "Allow"
@@ -18,8 +17,9 @@ resource "aws_iam_role" "eks_cluster_role" {
   assume_role_policy = data.aws_iam_policy_document.eks_cluster_assume_role_policy.json
 }
 
-
-#EKS Worker Node IAM Role
+# -------------------------------
+# EKS Worker Node Role
+# -------------------------------
 data "aws_iam_policy_document" "eks_worker_assume_role_policy" {
   statement {
     effect = "Allow"
@@ -39,32 +39,41 @@ resource "aws_iam_role" "eks_worker_node_role" {
 resource "aws_iam_role_policy_attachment" "eks_worker_node_attach" {
   for_each = {
     "AmazonEKSWorkerNodePolicy"        = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
-    "AmazonEKS_CNI_Policy"              = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+    "AmazonEKS_CNI_Policy"             = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
     "AmazonEC2ContainerRegistryReadOnly" = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
   }
   role       = aws_iam_role.eks_worker_node_role.name
   policy_arn = each.value
 }
 
-#AWS LoadBalancer Controller OIDC Provider
+# EBS CSI Policy for Worker Node
+resource "aws_iam_role_policy_attachment" "eks_worker_node_ebs_csi" {
+  role       = aws_iam_role.eks_worker_node_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+}
+
+# -------------------------------
+# AWS Load Balancer Controller (ALB Ingress Controller)
+# -------------------------------
+# OIDC Thumbprint for IRSA
 data "tls_certificate" "lb_controller_thumbprint" {
   url = module.eks.cluster_oidc_issuer_url
 }
 
 resource "aws_iam_openid_connect_provider" "eks" {
-  count          = var.create_iam_for_lb_controller ? 1 : 0
-  url            = module.eks.cluster_oidc_issuer_url
-  client_id_list = ["sts.amazonaws.com"]
+  count           = var.create_iam_for_lb_controller ? 1 : 0
+  url             = module.eks.cluster_oidc_issuer_url
+  client_id_list  = ["sts.amazonaws.com"]
   thumbprint_list = [data.tls_certificate.lb_controller_thumbprint.certificates[0].sha1_fingerprint]
 }
 
-# AWS LB Controller IAM Role
+# Trust Policy (ALB Controller용)
 data "aws_iam_policy_document" "lb_controller_trust" {
   statement {
     effect = "Allow"
     principals {
       type        = "Federated"
-      identifiers = [ aws_iam_openid_connect_provider.eks[0].arn ]
+      identifiers = [aws_iam_openid_connect_provider.eks[0].arn]
     }
     actions = ["sts:AssumeRoleWithWebIdentity"]
     condition {
@@ -75,14 +84,14 @@ data "aws_iam_policy_document" "lb_controller_trust" {
   }
 }
 
-#IAM Role
+# ALB Controller용 IAM Role (단 1개)
 resource "aws_iam_role" "aws_lb_controller" {
-  count               = var.create_iam_for_lb_controller ? 1 : 0
-  name                = "${var.cluster_name}-aws-lb-controller"
-  assume_role_policy  = data.aws_iam_policy_document.lb_controller_trust.json
+  count              = var.create_iam_for_lb_controller ? 1 : 0
+  name               = "${var.cluster_name}-aws-lb-controller"
+  assume_role_policy = data.aws_iam_policy_document.lb_controller_trust.json
 }
 
-#IAM
+# 정책 파일 위치 (AWS 공식 정책)
 resource "aws_iam_policy" "aws_lb_controller_policy" {
   count       = var.create_iam_for_lb_controller ? 1 : 0
   name        = "${var.cluster_name}-aws-lb-controller-policy"
@@ -90,17 +99,9 @@ resource "aws_iam_policy" "aws_lb_controller_policy" {
   policy      = file("${path.module}/policies/aws-lb-controller.json")
 }
 
-# IAM Policy
 resource "aws_iam_policy_attachment" "aws_lb_controller_attach" {
   count      = var.create_iam_for_lb_controller ? 1 : 0
   name       = "${var.cluster_name}-aws-lb-controller-attach"
   policy_arn = aws_iam_policy.aws_lb_controller_policy[0].arn
-  roles      = [ aws_iam_role.aws_lb_controller[0].name ]
+  roles      = [aws_iam_role.aws_lb_controller[0].name]
 }
-
-#EBS Policy
-resource "aws_iam_role_policy_attachment" "eks_worker_node_ebs_csi" {
-  role       = aws_iam_role.eks_worker_node_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
-}
-

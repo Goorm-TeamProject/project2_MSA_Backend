@@ -1,3 +1,4 @@
+#auth-mysql.yaml
 image:
   tag: 8.0.36
 primary:

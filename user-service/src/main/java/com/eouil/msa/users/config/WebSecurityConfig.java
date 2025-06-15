@@ -45,9 +45,8 @@ public class WebSecurityConfig {
                                 "/api/users/login",
                                 "/api/users/logout",
                                 "/api/users/refresh",
-                                "/api/users/health"
+                                "/actuator/health"
                         ).permitAll()
-                        .requestMatchers("/api/users/mfa/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .build();
