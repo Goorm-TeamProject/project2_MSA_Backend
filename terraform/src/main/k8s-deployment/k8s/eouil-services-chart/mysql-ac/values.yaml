@@ -1,0 +1,21 @@
+image:
+  repository: mysql
+  tag: "8.0"
+  pullPolicy: IfNotPresent
+
+mysqlRootPassword: Goorm!
+mysqlDatabase: acdb
+mysqlUser: acuser
+mysqlPassword: acpass
+
+resources:
+  requests:
+    cpu: "128m"
+    memory: "512Mi"
+  limits:
+    cpu: "256m"
+    memory: "1Gi"
+
+persistence:
+  enabled: false
+
