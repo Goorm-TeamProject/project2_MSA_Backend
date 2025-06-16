@@ -1,5 +1,4 @@
 #helm_values.yaml
-
 certificateArn: "arn:aws:acm:ap-northeast-2:640168458081:certificate/xxxxxx"
 domainName: "api.eouil.com"
 
@@ -30,7 +29,7 @@ gatewayService:
 authService:
   image:
     repository: 640168458081.dkr.ecr.ap-northeast-2.amazonaws.com/eouil-auth-service
-    tag: "1.0.28"
+    tag: "1.0.29"
   port: 8081
   env:
     - name: SPRING_PROFILES_ACTIVE
@@ -38,10 +37,8 @@ authService:
     - name: SERVER_PORT
       value: "8081"
     - name: SPRING_DATASOURCE_URL
-      valueFrom:
-        secretKeyRef:
-          name: spring-mysql-auth-secret
-          key: SPRING_DATASOURCE_URL
+      value: jdbc:mysql://eouil-services-mysql-auth.default.svc.cluster.local:3306/authdb
+    - name: SPRING_DATASOURCE_USERNAME
     - name: SPRING_DATASOURCE_USERNAME
       valueFrom:
         secretKeyRef:
@@ -130,48 +127,6 @@ acService:
           name: eouil-jwt-secret
           key: JWT_SECRET
 
-#AC Database
-mysql-ac:
-  primary:
-    resources:
-      requests:
-        cpu: "128m"
-        memory: "512Mi"
-      limits:
-        cpu: "256m"
-        memory: "1Gi"
-    persistence:
-      enabled: true
-      size: 256Mi
-      storageClass: gp2-waitforfirstconsumer
-    auth:
-      rootPassword: Goorm!
-      database: acdb
-      username: acuser
-      password: acpass
-
-#Auth Database
-mysql-auth:
-   primary:
-    resources:
-      requests:
-        cpu: "128m"
-        memory: "512Mi"
-      limits:
-        cpu: "256m"
-        memory: "1Gi"
-    persistence:
-      enabled: true
-      size: 128Mi
-      storageClass: gp2-waitforfirstconsumer
-    auth:
-      rootPassword: Goorm!
-      username:   authuser
-      password:   authpass
-      database:   authdb
-
-    service:
-      port: 3306
 
 #Redis
 redis:

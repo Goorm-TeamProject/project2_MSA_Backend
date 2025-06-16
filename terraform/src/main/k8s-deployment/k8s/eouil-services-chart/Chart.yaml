@@ -4,14 +4,6 @@ description: Umbrella Helm chart for eouil microservices and dependencies
 version: 0.1.0
 appVersion: "1.0"
 dependencies:
-  - name: mysql
-    alias: mysql-ac
-    version: 13.0.1
-    repository: https://charts.bitnami.com/bitnami
-  - name: mysql
-    alias: mysql-auth
-    version: 13.0.1
-    repository: https://charts.bitnami.com/bitnami
   - name: redis
     version: 21.2.1
     repository: https://charts.bitnami.com/bitnami
