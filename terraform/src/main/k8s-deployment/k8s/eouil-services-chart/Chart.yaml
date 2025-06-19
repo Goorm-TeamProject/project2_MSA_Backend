@@ -3,10 +3,3 @@ name: eouil-services
 description: Umbrella Helm chart for eouil microservices and dependencies
 version: 0.1.0
 appVersion: "1.0"
-dependencies:
-  - name: redis
-    version: 21.2.1
-    repository: https://charts.bitnami.com/bitnami
-  - name: kafka
-    version: 32.2.13
-    repository: https://charts.bitnami.com/bitnami

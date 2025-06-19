@@ -35,7 +35,6 @@ spring:
           uri: http://auth-service.default.svc.cluster.local:80
           predicates:
             - Host=api.eouil.com
-            - Method=POST
             - Path=/api/users/join,/api/users/login,/api/users/logout
 
         - id: user-refresh
@@ -86,6 +85,9 @@ spring:
             #- name: AuthorizationHeader
 
 management:
+  health:
+    redis:
+      enabled: false
   endpoints:
     web:
       exposure:

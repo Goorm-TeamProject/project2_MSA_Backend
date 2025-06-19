@@ -51,8 +51,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'io.lettuce:lettuce-core' // Lettuce 클라이언트 사용 시
 
-    //Kafka
-    implementation 'org.springframework.kafka:spring-kafka'
+    //SQS
+    implementation platform("software.amazon.awssdk:bom:2.25.2")
+    implementation "software.amazon.awssdk:sqs"
 
     implementation project(":common-lib")
 }

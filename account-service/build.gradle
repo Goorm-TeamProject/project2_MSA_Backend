@@ -63,6 +63,10 @@ dependencies {
 
     // ★ Feign Client (Spring Cloud OpenFeign)
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+
+    //SQS
+    implementation platform("software.amazon.awssdk:bom:2.25.2")
+    implementation "software.amazon.awssdk:sqs"
 }
 
 dependencyManagement {

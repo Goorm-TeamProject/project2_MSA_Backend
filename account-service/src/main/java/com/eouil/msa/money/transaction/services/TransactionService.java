@@ -3,6 +3,7 @@ package com.eouil.msa.money.transaction.services;
 import com.eouil.msa.money.account.domains.Account;
 import com.eouil.msa.money.account.repositories.AccountRepository;
 import com.eouil.msa.money.account.services.AccountService;
+import com.eouil.msa.money.account.sqs.SqsPublisher;
 import com.eouil.msa.money.transaction.domains.Transaction;
 import com.eouil.msa.money.transaction.domains.TransactionStatus;
 import com.eouil.msa.money.transaction.domains.TransactionType;
@@ -30,19 +31,32 @@ public class TransactionService {
     private final AccountService accountService;
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
+    private final SqsPublisher sqsPublisher;
 
+    // TransactionService.java
     @Transactional
     public List<TransferResponseDTO> transfer(TransferRequestDTO req, String userId) {
         Account from = handleWithdraw(req.getFromAccountNumber(), req.getAmount());
         Account to = handleDeposit(req.getToAccountNumber(), req.getAmount());
         Transaction tx = createTransferTransaction(from, to, req);
+
+        TransferResponseDTO logDto = buildResponse(tx);
+        sqsPublisher.publishTransactionLog(logDto);
+
         return buildTransferResponses(tx, from, to);
     }
+
 
     @Transactional
     public TransferResponseDTO withdraw(WithdrawRequestDTO request, String userId) {
         Account from = handleWithdraw(request.getFromAccountNumber(), request.getAmount());
         Transaction tx = createSimpleTransaction(from, null, TransactionType.WITHDRAWAL, request.getAmount(), request.getMemo(), from.getBalance());
+
+        //SQS 발송
+        TransferResponseDTO response = buildResponse(tx);
+
+        sqsPublisher.publishTransactionLog(response);
+
         return buildResponse(tx);
     }
 
@@ -50,6 +64,11 @@ public class TransactionService {
     public TransferResponseDTO deposit(DepositRequestDTO request, String userId) {
         Account to = handleDeposit(request.getToAccountNumber(), request.getAmount());
         Transaction tx = createSimpleTransaction(null, to, TransactionType.DEPOSIT, request.getAmount(), request.getMemo(), to.getBalance());
+
+        //SQS 전송
+        TransferResponseDTO response = buildResponse(tx);
+        sqsPublisher.publishTransactionLog(response);
+
         return buildResponse(tx);
     }
 

@@ -11,14 +11,18 @@ import com.eouil.msa.users.dtos.LoginRequest;
 import com.eouil.msa.users.dtos.LoginResponse;
 import com.eouil.msa.users.exceptions.*;
 import com.eouil.msa.users.repositories.UserRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.support.SendResult;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
+import software.amazon.awssdk.services.sqs.model.SendMessageResponse;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -28,12 +32,16 @@ import java.util.concurrent.TimeUnit;
 public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final GoogleAuthenticator gAuth = new GoogleAuthenticator();
     private final Environment env;
     private final RedisTemplate<String, String> redisTemplate;
     private final RedisTokenService redisTokenService;
     private final JwtUtil jwtUtil;
-    private final KafkaTemplate<String, UserCreatedEvent> kafkaTemplate;
+    private final SqsClient sqsClient;
+    private final ObjectMapper objectMapper;
+
+
+    @Value("${aws.sqs.userCreatedQueueUrl}")
+    private String userCreatedQueueUrl;
 
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
@@ -41,14 +49,17 @@ public class AuthService {
                        RedisTemplate<String, String> redisTemplate,
                        RedisTokenService redisTokenService,
                        JwtUtil jwtUtil,
-                       KafkaTemplate<String, UserCreatedEvent> kafkaTemplate) {
+                       SqsClient sqsClient,
+                       ObjectMapper objectMapper)
+    {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.env = env;
         this.redisTemplate = redisTemplate;
         this.redisTokenService = redisTokenService;
         this.jwtUtil = jwtUtil;
-        this.kafkaTemplate = kafkaTemplate;
+        this.sqsClient = sqsClient;
+        this.objectMapper = objectMapper;
     }
 
 
@@ -76,15 +87,20 @@ public class AuthService {
         UserCreatedEvent event = new UserCreatedEvent(userId, user.getEmail(), user.getName());
 
         try {
-            SendResult<String, UserCreatedEvent> result = kafkaTemplate.send("user.created", userId, event).get(10, TimeUnit.SECONDS);
-            log.info("[JOIN] Kafka Event 전송 성공 - topic: {}, partition: {}, offset: {}, event: {}",
-                    result.getRecordMetadata().topic(),
-                    result.getRecordMetadata().partition(),
-                    result.getRecordMetadata().offset(),
-                    event);
+            String messageBody = objectMapper.writeValueAsString(event);
+
+            SendMessageRequest request = SendMessageRequest.builder()
+                    .queueUrl(userCreatedQueueUrl)
+                    .messageBody(messageBody)
+                    .messageGroupId("user-group")
+                    .messageDeduplicationId(UUID.randomUUID().toString())
+                    .build();
+
+            SendMessageResponse response = sqsClient.sendMessage(request);
+            log.info("[JOIN - SQS] SQS 전송 성공 - MessageId: {}, Event: {}", response.messageId(), event);
+
         } catch (Exception e) {
-            log.error("[JOIN] Kafka Event 전송 실패 - userId: {}, error: {}",
-                    userId, e.getMessage(), e);
+            log.error("[JOIN - SQS] SQS 전송 실패 - userId: {}, error: {}", userId, e.getMessage(), e);
         }
 
         return new JoinResponse(user.getName(), user.getEmail(), user.getUserId());

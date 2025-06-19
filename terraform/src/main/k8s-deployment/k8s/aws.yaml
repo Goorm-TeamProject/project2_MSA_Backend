@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: aws-secret
+  namespace: default
+type: Opaque
+data:
+  AWS_ACCESS_KEY_ID: QUtJQVpLRElETzVRNzUzVURWVFg=
+  AWS_SECRET_ACCESS_KEY: dEdtRXNCUmZadWxWRWlqaENScnpGUUo5WWZXeHJmdng3YU16aUFmdw==

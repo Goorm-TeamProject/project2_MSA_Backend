@@ -4,14 +4,14 @@ spring:
       on-profile: prod
 
   datasource:
-    url: ${SPRING_DATASOURCE_URL} # AWS Secrets Manager에서 읽어올 변수
-    username: ${SPRING_DATASOURCE_USERNAME} # AWS Secrets Manager에서 읽어올 변수
-    password: ${SPRING_DATASOURCE_PASSWORD} # AWS Secrets Manager에서 읽어올 변수
-    driver-class-name: com.mysql.cj.jdbc.Driver # 운영 환경의 MySQL 드라이버
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
@@ -19,24 +19,21 @@ spring:
           new_generator_mappings: false
     show-sql: false
 
+
+
   data:
     redis:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
-      password: ${REDIS_PASSWORD}
-      username: default
 
-  kafka:
-    bootstrap-servers: "eouil-services-kafka-controller-0.eouil-services-kafka-controller-headless.default.svc.cluster.local:9092"
-    producer:
-      retries: 3
-      acks: all
-      batch-size: 16384
-      buffer-memory: 33554432
-      properties:
-        enable.idempotence: true
-        max.in.flight.requests.per.connection: 5
-        max.request.size: 2097152
-        request.timeout.ms: 30000
-        retry.backoff.ms: 1000
-        compression.type: snappy
+logging:
+  level:
+    com.zaxxer.hikari: DEBUG
+    org.springframework.jdbc: DEBUG
+
+aws:
+  sqs:
+    userCreatedQueueUrl: https://sqs.ap-northeast-2.amazonaws.com/640168458081/Eouil-AC.fifo
+  credentials:
+    accessKey: ${AWS_ACCESS_KEY_ID}
+    secretKey: ${AWS_SECRET_ACCESS_KEY}

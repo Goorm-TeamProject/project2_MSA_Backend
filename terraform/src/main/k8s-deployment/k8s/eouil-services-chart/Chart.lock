@@ -1,9 +1,0 @@
-dependencies:
-- name: redis
-  repository: https://charts.bitnami.com/bitnami
-  version: 21.2.1
-- name: kafka
-  repository: https://charts.bitnami.com/bitnami
-  version: 32.2.13
-digest: sha256:0a565e413bdaec9ba7dce1be5efb52b54d90260732369a3a08f27b4c7bf384f6
-generated: "2025-06-16T15:19:52.882198+09:00"
