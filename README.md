@@ -34,7 +34,8 @@
 ---
  서비스 구성도
 
-![아키텍처 다이어그램](<img width="625" height="694" alt="스크린샷 2025-07-24 오전 11 04 19" src="https://github.com/user-attachments/assets/829de0b3-a080-4f7d-9148-78c2fb78acb1" />) 
+![아키텍처 다이어그램 
+<img width="625" height="694" alt="스크린샷 2025-07-24 오전 11 04 19" src="https://github.com/user-attachments/assets/829de0b3-a080-4f7d-9148-78c2fb78acb1" /> 
 
 
 
