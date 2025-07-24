@@ -30,11 +30,8 @@
 | 모니터링 / 복원 | Prometheus, Velero, CloudWatch Logs, OpenTelemetry |
 | 보안            | WAF, Token Blacklist(Redis), MFA, OWASP ZAP 자동화 |
 | 인증            | JWT (access/refresh), Cookie 기반 인증 (Spring Gateway Filter) |
+------------------
 
----
- 서비스 구성도
-
-![아키텍처 다이어그램 
 <img width="625" height="694" alt="스크린샷 2025-07-24 오전 11 04 19" src="https://github.com/user-attachments/assets/829de0b3-a080-4f7d-9148-78c2fb78acb1" /> 
 
 
